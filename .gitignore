@@ -1,0 +1,10 @@
+
+cmake-build-debug/
+
+build/
+
+.vscode/
+
+third_party/cutlass-3.5.0/
+third_party/spdlog/
+.cache
