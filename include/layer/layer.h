@@ -8,7 +8,12 @@
 #include <vector>
 
 /**
- * @brief Layer 是各个算子的抽象类，forward函数执行具体的计算过程
+ * @brief Layer 是各个算子的抽象类
+ *        forward函数用于转发计算过程到 cpu或者gpu上
+ *        查看了其他如MNN，ncnn等框架的实现，将设备抽象为backend，
+ *        然后单独为该backend上的算子实现一个对应的Layer，
+ *        分开去管理不同backend上Layer的参数。
+ *        这里不选择这种设计的方式，因为是以学习的目的，注重算子内部的实现，而不怎么注重多平台的兼容性
  *        layer 的数据区域保存该算子需要的权重data
  */
 namespace inferx
@@ -28,7 +33,15 @@ public:
 
     // virtual StatusCode forward_inplace(std::vector<Tensor::TensorPtr> bottoms) const;
 
+    /**
+     * @brief 检查进行计算的合法性，同时根据layer device_type检查Tensor的位置，最后转发算子的具体操作到cpu or gpu
+     *
+     * @return StatusCode
+     */
     virtual StatusCode forward();
+
+    virtual StatusCode forward_gpu();
+    virtual StatusCode forward_cpu();
 
     /**
      * @brief load layer specific parameter, usually some single param, not a Tensor.
