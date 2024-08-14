@@ -24,21 +24,37 @@ using namespace inferx::core;
 class Layer
 {
 public:
-    Layer() = delete;
+    Layer() = default;
 
     explicit Layer(std::string layer_name);
-
-    // virtual StatusCode forward(const std::vector<Tensor::TensorPtr> bottoms, std::vector<Tensor::TensorPtr> tops)
-    // const;
-
-    // virtual StatusCode forward_inplace(std::vector<Tensor::TensorPtr> bottoms) const;
-
     /**
      * @brief 检查进行计算的合法性，同时根据layer device_type检查Tensor的位置，最后转发算子的具体操作到cpu or gpu
      *
      * @return StatusCode
      */
-    virtual StatusCode forward();
+    virtual StatusCode forward()
+    {
+        // auto check_on_where = [](const std::vector<Tensor::TensorPtr>& tensors, DeviceType device_type) -> bool {
+        //     for (auto& tensor : tensors)
+        //     {
+        //         if (tensor->device_type() != device_type)
+        //         {
+        //             return false;
+        //         }
+        //     }
+        //     return true;
+        // };
+        if (device_type_ == DeviceType::DeviceType_GPU)
+        {
+            this->to_cuda();
+            return forward_gpu();
+        }
+        else
+        {
+            this->to_cpu();
+            return forward_cpu();
+        }
+    }
 
     virtual StatusCode forward_gpu();
     virtual StatusCode forward_cpu();
@@ -57,19 +73,41 @@ public:
     virtual StatusCode load_model();
 
     /**
-     * @brief allocate tensor memory for weights
+     * @brief prepare layer info, such as input/output tensor shape, weight shape
      *
      * @return StatusCode
      */
-    virtual StatusCode prepare_weight();
+    virtual StatusCode prepare_layer();
+    /**
+     * @brief move this layer to CPU
+     *
+     * @return StatusCode
+     */
+    StatusCode to_cpu()
+    {
+        return StatusCode::NotImplemented;
+    }
     /**
      * @brief move this layer to GPU
      *
      * @return StatusCode
      */
-    virtual StatusCode to_cuda();
+    StatusCode to_cuda()
+    {
+        return StatusCode::NotImplemented;
+    }
 
-private:
+    DeviceType device_type() const
+    {
+        return device_type_;
+    }
+
+    std::string layer_type() const
+    {
+        return layer_name_;
+    }
+
+protected:
     DeviceType device_type_;
     std::string layer_name_;
     std::vector<Tensor> weights_; // include all tensor param

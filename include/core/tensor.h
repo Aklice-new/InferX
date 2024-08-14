@@ -3,6 +3,7 @@
 
 #include "core/allocator.h"
 #include "core/common.h"
+#include "core/status.h"
 #include <cstddef>
 #include <memory>
 #include <atomic>
@@ -26,6 +27,12 @@ public:
     // 所有的构造函数都转发到这里完成
     void create(
         DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
+
+    DeviceType device_type() const;
+
+    StatusCode to_cpu();
+
+    StatusCode to_cuda();
 
     // Tensor(Tensor& tensor) = delete;
     Tensor& operator=(const Tensor& tensor);
@@ -59,6 +66,8 @@ public:
 
     template <typename T>
     T* ptr();
+
+    size_t byte_size();
 };
 } // namespace core
 } // namespace inferx

@@ -15,7 +15,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <mutex>
+#include <unordered_map>
 #include <vector>
 
 #include <cuda.h>
@@ -31,8 +33,16 @@ class Buffer;
 
 enum class DeviceType
 {
-    CPUALLOCATOR,
-    GPUALLOCATOR
+    DeviceType_CPU,
+    DeviceType_GPU
+};
+
+enum class MemcpyKind
+{
+    HostToHost,
+    HostToDevice,
+    DeviceToHost,
+    DeviceToDevice
 };
 
 /**
@@ -49,6 +59,8 @@ public:
     virtual void* allocate(size_t size) = 0;
     virtual void release(void* ptr) = 0;
     virtual DeviceType get_device_type() = 0;
+    virtual void memcpy(
+        void* dst, const void* src, size_t size, MemcpyKind kind, cudaStream_t stream = nullptr, bool is_async = false);
     virtual ~Allocator() {}
     DeviceType device_type_;
     std::mutex alloc_mutex;
@@ -67,7 +79,7 @@ public:
     ~CPUAllocator();
 
 private:
-    DeviceType device_type_ = DeviceType::CPUALLOCATOR;
+    DeviceType device_type_ = DeviceType::DeviceType_CPU;
     void* aligned_alloc(size_t size, size_t alignment = 32);
 };
 
@@ -88,8 +100,84 @@ public:
     ~GPUAllocator();
 
 private:
+    DeviceType device_type_ = DeviceType::DeviceType_GPU;
     uint32_t device_id_;
     CudaHandle cuda_handle_;
+};
+
+/**
+ * @brief CPUAllocator 工厂，单例模式
+ *        饿汉模式，加锁保证线程安全
+ *
+ */
+class CPUAllocatorFactory
+{
+public:
+    static std::shared_ptr<Allocator> get_instance()
+    {
+        mutex_.lock();
+        if (allocator_ == nullptr)
+        {
+            allocator_ = std::make_shared<CPUAllocator>();
+        }
+        mutex_.unlock();
+        return allocator_;
+    }
+    // static void delete_instance()
+    // {
+    //     if (allocator_ != nullptr)
+    //     {
+    //         allocator_.reset();
+    //     }
+    // }
+
+private: // 禁止外部构造和拷贝
+    CPUAllocatorFactory() = default;
+    ~CPUAllocatorFactory() = default;
+    CPUAllocatorFactory(const CPUAllocatorFactory&);
+    const CPUAllocatorFactory& operator=(const CPUAllocatorFactory&);
+
+private:
+    static std::shared_ptr<Allocator> allocator_;
+    static std::mutex mutex_;
+};
+
+/**
+ * @brief GPUAllocator 工厂，多例模式
+ *        饿汉模式，加锁保证线程安全
+ *
+ */
+class GPUAllocatorFactory
+{
+public:
+    static std::shared_ptr<Allocator> get_instance(uint32_t device_id = 0)
+    {
+        mutex_.lock();
+        if (allocator_map_.count(device_id) == 0)
+        {
+            auto allocator_ptr = std::make_shared<GPUAllocator>(device_id);
+            allocator_map_.emplace(device_id, allocator_ptr);
+        }
+        mutex_.unlock();
+        return allocator_map_.at(device_id);
+    }
+    // static void delete_instance(uint32_t device_id = 0)
+    // {
+    //     if (allocator_ != nullptr)
+    //     {
+    //         allocator_.reset();
+    //     }
+    // }
+
+private:
+    GPUAllocatorFactory() = default;
+    ~GPUAllocatorFactory() = default;
+    GPUAllocatorFactory(const GPUAllocatorFactory&);
+    const GPUAllocatorFactory& operator=(const GPUAllocatorFactory&);
+
+private:
+    static std::unordered_map<uint32_t, std::shared_ptr<Allocator>> allocator_map_;
+    static std::mutex mutex_;
 };
 
 }; // namespace core

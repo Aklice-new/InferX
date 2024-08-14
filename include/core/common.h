@@ -22,6 +22,7 @@ enum StatusCode : uint8_t
     Failed = 1,
     OutOfMemory = 2,
     InvalidValue = 3,
+    NotImplemented = 4,
 };
 
 } // namespace core

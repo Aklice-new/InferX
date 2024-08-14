@@ -1,6 +1,7 @@
 #include "core/tensor.h"
+#include "core/allocator.h"
 #include "core/common.h"
-#include "spdlog/spdlog.h"
+#include <glog/logging.h>
 #include <atomic>
 #include <cassert>
 #include <cstddef>
@@ -22,7 +23,7 @@ static size_t dtype_to_bytes(DataType dtype)
     case DataTypeInt8: return 1;
     default:
     {
-        spdlog::error("Unknown data type.");
+        LOG(ERROR) << "Unknown data type";
     }
     }
     return 0;
@@ -52,7 +53,7 @@ void Tensor::create(DataType dtype, std::vector<size_t> shapes, std::shared_ptr<
     allocator_ = allocator;
     if (need_alloc)
     {
-        data_ptr_ = allocator_->allocate(dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0]);
+        data_ptr_ = allocator_->allocate(byte_size());
         refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
     }
 }
@@ -126,6 +127,70 @@ template <typename T>
 T* Tensor::ptr()
 {
     return static_cast<T>(data_ptr_);
+}
+
+size_t Tensor::byte_size()
+{
+    return dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0];
+}
+
+DeviceType Tensor::device_type() const
+{
+    return allocator_->device_type_;
+}
+
+StatusCode Tensor::to_cpu()
+{
+    if (device_type() == DeviceType::DeviceType_CPU)
+    {
+        return StatusCode::Success;
+    }
+    const DeviceType on_where = device_type();
+    if (on_where == DeviceType::DeviceType_GPU)
+    {
+        size_t size = byte_size();
+        void* cpu_data_ptr = nullptr;
+        auto cpu_allocator_instance = CPUAllocatorFactory::get_instance();
+        cpu_data_ptr = cpu_allocator_instance->allocate(size);
+        cpu_allocator_instance->memcpy(cpu_data_ptr, data_ptr_, size, MemcpyKind::HostToDevice);
+        allocator_->release(data_ptr_); // 释放GPU上的内存
+        data_ptr_ = cpu_data_ptr;
+        allocator_ = cpu_allocator_instance;
+        return StatusCode::Success;
+    }
+    else if (on_where == DeviceType::DeviceType_CPU)
+    {
+        LOG(INFO) << "Tensor is already on CPU.";
+        return StatusCode::Success;
+    }
+    return StatusCode::Failed;
+}
+
+StatusCode Tensor::to_cuda()
+{
+    if (device_type() == DeviceType::DeviceType_GPU)
+    {
+        return StatusCode::Success;
+    }
+    const DeviceType on_where = device_type();
+    if (on_where == DeviceType::DeviceType_CPU)
+    {
+        size_t size = byte_size();
+        void* cuda_data_ptr = nullptr;
+        auto gpu_allocator_instance = GPUAllocatorFactory::get_instance();
+        cuda_data_ptr = gpu_allocator_instance->allocate(size);
+        gpu_allocator_instance->memcpy(cuda_data_ptr, data_ptr_, size, MemcpyKind::HostToDevice);
+        allocator_->release(data_ptr_); // 释放CPU上的内存
+        data_ptr_ = cuda_data_ptr;
+        allocator_ = gpu_allocator_instance;
+        return StatusCode::Success;
+    }
+    else if (on_where == DeviceType::DeviceType_GPU)
+    {
+        LOG(INFO) << "Tensor is already on GPU.";
+        return StatusCode::Success;
+    }
+    return StatusCode::Failed;
 }
 
 } // namespace core

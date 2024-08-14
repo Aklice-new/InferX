@@ -1,12 +1,9 @@
 #ifndef _ACTIVATION_H_
 #define _ACTIVATION_H_
 
-#include "layer/layer.h"
-
 namespace inferx
 {
-using namespace inferx::layer;
-namespace activation
+namespace layer
 {
 enum class ActivationType
 {
@@ -25,11 +22,7 @@ enum class ActivationType
     ActivationType_Unknow
 };
 
-class Activation : public Layer
-{
-};
-
-} // namespace activation
+} // namespace layer
 } // namespace inferx
 
 #endif

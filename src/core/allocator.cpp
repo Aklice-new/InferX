@@ -10,13 +10,55 @@ namespace inferx
 {
 namespace core
 {
+
+void Allocator::memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, cudaStream_t stream, bool is_async)
+{
+    if (kind == MemcpyKind::HostToHost)
+    {
+        ::memcpy(dst, src, size);
+    }
+    else if (kind == MemcpyKind::HostToDevice)
+    {
+        if (is_async)
+        {
+            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream));
+        }
+        else
+        {
+            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice));
+        }
+    }
+    else if (kind == MemcpyKind::DeviceToHost)
+    {
+        if (is_async)
+        {
+            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream));
+        }
+        else
+        {
+            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost));
+        }
+    }
+    else if (kind == MemcpyKind::DeviceToDevice)
+    {
+        if (is_async)
+        {
+            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream));
+        }
+        else
+        {
+            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice));
+        }
+    }
+}
+
 /**
  * @brief CPUAllocator
  *
  */
 CPUAllocator::CPUAllocator()
 {
-    device_type_ = DeviceType::CPUALLOCATOR;
+    device_type_ = DeviceType::DeviceType_CPU;
 }
 
 void* CPUAllocator::allocate(size_t size)
@@ -99,7 +141,7 @@ CPUAllocator::~CPUAllocator()
  */
 GPUAllocator::GPUAllocator(uint32_t device_id)
 {
-    device_type_ = DeviceType::GPUALLOCATOR;
+    device_type_ = DeviceType::DeviceType_GPU;
     device_id_ = device_id;
     CUDA_CHECK(cudaSetDevice(device_id));
     CUDA_CHECK(cudaStreamCreate(&(cuda_handle_.stream)));
