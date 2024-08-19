@@ -8,6 +8,9 @@ namespace inferx
 
 namespace layer
 {
+/* LayerRegister static member defination */
+
+std::shared_ptr<LayerRegister::LayerCreateTable> LayerRegister::layer_table_ = nullptr;
 
 // 返回LayerRegister的注册表，这里保证单例
 std::shared_ptr<LayerRegister::LayerCreateTable> LayerRegister::get_table()

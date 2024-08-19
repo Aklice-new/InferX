@@ -237,5 +237,15 @@ GPUAllocator::~GPUAllocator()
     }
 }
 
+/* CPU Factory static memeber define */
+
+std::mutex CPUAllocatorFactory::mutex_;
+std::shared_ptr<Allocator> CPUAllocatorFactory::allocator_ = nullptr;
+
+/* GPU Factory static memeber define */
+
+std::mutex GPUAllocatorFactory::mutex_;
+std::unordered_map<uint32_t, std::shared_ptr<Allocator>> GPUAllocatorFactory::allocator_map_;
+
 } // namespace core
 } // namespace inferx

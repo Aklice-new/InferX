@@ -3,6 +3,7 @@
 #include "core/allocator.h"
 #include "core/common.h"
 #include "core/tensor.h"
+#include "graph/pnnx/ir.h"
 
 #include <string>
 #include <vector>
@@ -21,12 +22,17 @@ namespace inferx
 namespace layer
 {
 using namespace inferx::core;
+
 class Layer
 {
 public:
-    Layer() = default;
+    explicit Layer() = default;
 
-    explicit Layer(std::string layer_name);
+    explicit Layer(std::string layer_name)
+        : layer_name_(layer_name)
+    {
+    }
+    virtual ~Layer() = default;
     /**
      * @brief 检查进行计算的合法性，同时根据layer device_type检查Tensor的位置，最后转发算子的具体操作到cpu or gpu
      *
@@ -34,16 +40,6 @@ public:
      */
     virtual StatusCode forward()
     {
-        // auto check_on_where = [](const std::vector<Tensor::TensorPtr>& tensors, DeviceType device_type) -> bool {
-        //     for (auto& tensor : tensors)
-        //     {
-        //         if (tensor->device_type() != device_type)
-        //         {
-        //             return false;
-        //         }
-        //     }
-        //     return true;
-        // };
         if (device_type_ == DeviceType::DeviceType_GPU)
         {
             this->to_cuda();
@@ -56,28 +52,44 @@ public:
         }
     }
 
-    virtual StatusCode forward_gpu();
-    virtual StatusCode forward_cpu();
+    virtual StatusCode forward_gpu()
+    {
+        return StatusCode::NotImplemented;
+    };
+    virtual StatusCode forward_cpu()
+    {
+        return StatusCode::NotImplemented;
+    };
 
     /**
      * @brief load layer specific parameter, usually some single param, not a Tensor.
      *
      * @return StatusCode
      */
-    virtual StatusCode load_param();
+    virtual StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params)
+    {
+        return StatusCode::NotImplemented;
+    };
     /**
      * @brief load layer specific weight data
      *
      * @return StatusCode
      */
-    virtual StatusCode load_model();
+    virtual StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes)
+    {
+        return StatusCode::NotImplemented;
+    }
 
     /**
      * @brief prepare layer info, such as input/output tensor shape, weight shape
      *
      * @return StatusCode
      */
-    virtual StatusCode prepare_layer();
+    virtual StatusCode prepare_layer(
+        const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs)
+    {
+        return StatusCode::NotImplemented;
+    }
     /**
      * @brief move this layer to CPU
      *

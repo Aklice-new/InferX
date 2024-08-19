@@ -6,7 +6,10 @@ namespace inferx
 namespace layer
 {
 
-StatusCode ReluLayer::forward_gpu() {}
+StatusCode ReluLayer::forward_gpu()
+{
+    return StatusCode::Success;
+}
 
 } // namespace layer
 } // namespace inferx

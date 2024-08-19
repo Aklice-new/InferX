@@ -34,6 +34,11 @@ Tensor::Tensor()
     //   不需要做任何处理，因为没有data
 }
 
+Tensor::Tensor(const std::string& name, DataType dtype, std::vector<size_t> shapes)
+{
+    create(dtype, shapes, CPUAllocatorFactory::get_instance(), false);
+}
+
 Tensor::Tensor(DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
 {
     create(dtype, shapes, allocator, need_alloc);

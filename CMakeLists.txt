@@ -23,7 +23,14 @@ include(cmake/FindGlog.cmake)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/spdlog/include)
 
 
-file(GLOB SRC_FILES src/core/*.cpp)
+file(GLOB SRC_FILES 
+        src/core/*.cpp
+        src/graph/*.cpp
+        src/graph/pnnx/*.cpp
+        src/layer/*.cpp
+        src/layer/kernels/*.cpp 
+        src/layer/kernels/cpu/*.cpp 
+        src/layer/kernels/cuda/*.cu)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -41,4 +48,5 @@ macro(add_test name)
 endmacro()
 
 add_test(test_tensor)
+add_test(test_graph)
 

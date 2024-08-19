@@ -3,7 +3,6 @@
 
 #include "core/allocator.h"
 #include "core/common.h"
-#include "core/status.h"
 #include <cstddef>
 #include <memory>
 #include <atomic>
@@ -21,6 +20,7 @@ class Tensor
 {
 public:
     explicit Tensor();
+    explicit Tensor(const std::string& name, DataType dtype, std::vector<size_t> shapes);
     explicit Tensor(
         DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
 
