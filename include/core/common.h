@@ -2,6 +2,8 @@
 #define _COMMON_H_
 
 #include <cstdint>
+#include <cstddef>
+
 namespace inferx
 {
 namespace core

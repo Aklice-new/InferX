@@ -128,12 +128,38 @@ void* Tensor::raw_ptr()
     return data_ptr_;
 }
 
+void* Tensor::gpu_data()
+{
+    if (device_type() == DeviceType::DeviceType_GPU)
+    {
+        return data_ptr_;
+    }
+    else
+    {
+        this->to_cuda();
+        return data_ptr_;
+    }
+}
+
+void* Tensor::cpu_data()
+{
+    if (device_type() == DeviceType::DeviceType_CPU)
+    {
+        return data_ptr_;
+    }
+    else
+    {
+        this->to_cpu();
+        return data_ptr_;
+    }
+}
+/* 模版的实现最好和声明放在一起，否则会出现链接错误
 template <typename T>
 T* Tensor::ptr()
 {
     return static_cast<T>(data_ptr_);
 }
-
+*/
 size_t Tensor::byte_size()
 {
     return dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0];
@@ -142,6 +168,16 @@ size_t Tensor::byte_size()
 DeviceType Tensor::device_type() const
 {
     return allocator_->device_type_;
+}
+
+DataType Tensor::dtype() const
+{
+    return dtype_;
+}
+
+size_t Tensor::size() const
+{
+    return m_shapes_[0] * m_strides_[0];
 }
 
 StatusCode Tensor::to_cpu()

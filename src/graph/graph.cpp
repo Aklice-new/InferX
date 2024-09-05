@@ -44,6 +44,9 @@ StatusCode Graph::load_model()
     layer_nums_ = graph_->ops.size();
     tensor_nums_ = graph_->operands.size();
 
+    LOG(INFO) << "layer nums: " << layer_nums_;
+    LOG(INFO) << "tensor nums: " << tensor_nums_;
+
     layers_.resize(layer_nums_);
     tensors_.resize(tensor_nums_);
     // initialize graph 将所有信息都从pnnx中读出来
@@ -148,7 +151,7 @@ void Graph::create_graph()
         {
             continue;
         }
-
+        /*
         // 实例化GraphNode中的Layer对象
         auto current_layer = LayerRegister::create_layer(current_graph_node->type_);
         // 3. 设置layer的输入输出
@@ -157,6 +160,7 @@ void Graph::create_graph()
         current_layer->load_param(current_graph_node->params_);
         current_layer->load_model(current_graph_node->attrs_);
         current_graph_node->layer_ = current_layer;
+        */
     }
     // topsort the graph, 设置execute_time来表示每个节点的执行顺序
     size_t global_execute_time = 0;

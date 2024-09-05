@@ -30,6 +30,10 @@ public:
 
     DeviceType device_type() const;
 
+    DataType dtype() const;
+
+    size_t size() const;
+
     StatusCode to_cpu();
 
     StatusCode to_cuda();
@@ -64,8 +68,15 @@ public:
 
     void* raw_ptr();
 
+    void* gpu_data();
+
+    void* cpu_data();
+
     template <typename T>
-    T* ptr();
+    T* ptr()
+    {
+        return static_cast<T*>(data_ptr_);
+    }
 
     size_t byte_size();
 };

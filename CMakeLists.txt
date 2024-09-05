@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(InferX LANGUAGES CUDA CXX)
+project(InferX LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -23,6 +23,8 @@ include(cmake/FindGlog.cmake)
 include_directories(${PROJECT_SOURCE_DIR}/third_party/spdlog/include)
 
 
+include_directories(${PROJECT_SOURCE_DIR}/include)
+
 file(GLOB SRC_FILES 
         src/core/*.cpp
         src/graph/*.cpp
@@ -32,7 +34,6 @@ file(GLOB SRC_FILES
         src/layer/kernels/cpu/*.cpp 
         src/layer/kernels/cuda/*.cu)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
 
 add_library(InferX SHARED ${SRC_FILES})
 target_link_libraries(InferX CUDA::cudart CUDA::cublas ${GLOG_LIBRARIES})
