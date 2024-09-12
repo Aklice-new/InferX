@@ -28,11 +28,15 @@ public:
     void create(
         DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
 
+    void apply_data(std::shared_ptr<Allocator> allocator = CPUAllocatorFactory::get_instance());
+
     DeviceType device_type() const;
 
     DataType dtype() const;
 
     size_t size() const;
+
+    std::vector<size_t> shapes() const;
 
     StatusCode to_cpu();
 

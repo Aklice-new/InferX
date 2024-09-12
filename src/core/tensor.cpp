@@ -54,12 +54,25 @@ void Tensor::create(DataType dtype, std::vector<size_t> shapes, std::shared_ptr<
     {
         m_strides_[dims_ - 1 - i] = m_shapes_[dims_ - i] * m_strides_[dims_ - i];
     }
-    // eg: shape[2, 3, 4] => strides[12, 4, 1] == [3*4, 4, 1]
+    // eg: shape[1, 2, 3, 4] => strides[24, 12, 4, 1] == [2 * 3 * 4, 3 * 4, 4, 1]
     allocator_ = allocator;
     if (need_alloc)
     {
         data_ptr_ = allocator_->allocate(byte_size());
         refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
+    }
+}
+
+void Tensor::apply_data(std::shared_ptr<Allocator> allocator)
+{
+    if (data_ptr_ == nullptr)
+    {
+        data_ptr_ = allocator->allocate(byte_size());
+        refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
+    }
+    else
+    {
+        LOG(INFO) << "Already applied data. Don't try to allocate again.";
     }
 }
 
@@ -178,6 +191,11 @@ DataType Tensor::dtype() const
 size_t Tensor::size() const
 {
     return m_shapes_[0] * m_strides_[0];
+}
+
+std::vector<size_t> Tensor::shapes() const
+{
+    return m_shapes_;
 }
 
 StatusCode Tensor::to_cpu()

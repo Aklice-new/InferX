@@ -7,6 +7,7 @@ namespace inferx
 {
 namespace layer
 {
+
 enum class ActivationType
 {
     ActivationType_Relu6,
@@ -23,7 +24,7 @@ class ActivationLayer : public Layer
 {
 public:
     ActivationLayer(std::string layer_name);
-
+    virtual ~ActivationLayer() = default;
     // 检查tensor的位置，并转发计算操作到cpu or gpu
     StatusCode forward_gpu() override;
     StatusCode forward_cpu() override;
@@ -31,10 +32,10 @@ public:
         const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs) override;
 
     // 设置加载本层的参数
-    StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
-    StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
+    // StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
+    // StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
 
-private:
+protected:
     ActivationType activation_type_ = ActivationType::ActivationType_Unknow;
 };
 

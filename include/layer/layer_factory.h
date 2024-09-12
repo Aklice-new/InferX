@@ -18,7 +18,7 @@ namespace layer
 class LayerRegister
 {
 public:
-    using LayerCreateFunc = layer::Layer (*)(std::string layer_name);
+    using LayerCreateFunc = layer::Layer* (*) (std::string layer_name);
     using LayerCreateTable = std::map<std::string, LayerCreateFunc>;
 
 private:
@@ -30,7 +30,7 @@ private:
 
 public:
     static std::shared_ptr<LayerCreateTable> get_table();
-    static void register_layer_creator(const std::string& layer_name, LayerCreateFunc& creator);
+    static void register_layer_creator(const std::string& layer_name, const LayerCreateFunc& creator);
     static std::shared_ptr<Layer> create_layer(const std::string& layer_name);
     static std::vector<std::string> get_registed_layers();
 };
@@ -38,13 +38,13 @@ public:
 class LayerRegisterWrapper
 {
 public:
-    explicit LayerRegisterWrapper(LayerRegister::LayerCreateFunc& layer_creator_func, const std::string& layer_name)
+    explicit LayerRegisterWrapper(LayerRegister::LayerCreateFunc layer_creator_func, const std::string& layer_name)
     {
         LayerRegister::register_layer_creator(layer_name, layer_creator_func);
     }
     template <typename... Ts>
     explicit LayerRegisterWrapper(
-        LayerRegister::LayerCreateFunc& layer_creator_func, std::string layer_name, const Ts... Args)
+        const LayerRegister::LayerCreateFunc& layer_creator_func, const std::string layer_name, const Ts&... Args)
         : LayerRegisterWrapper(layer_creator_func, Args...)
     {
         LayerRegister::register_layer_creator(layer_name, layer_creator_func);

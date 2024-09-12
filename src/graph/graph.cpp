@@ -151,16 +151,22 @@ void Graph::create_graph()
         {
             continue;
         }
-        /*
         // 实例化GraphNode中的Layer对象
         auto current_layer = LayerRegister::create_layer(current_graph_node->type_);
         // 3. 设置layer的输入输出
         current_layer->prepare_layer(input_tensors, output_tensors);
         // 4. 设置layer的 params and attrs
-        current_layer->load_param(current_graph_node->params_);
-        current_layer->load_model(current_graph_node->attrs_);
+        if (current_graph_node->params_.empty() == false)
+        {
+            LOG(INFO) << "load param: " << current_graph_node->name_;
+            current_layer->load_param(current_graph_node->params_);
+        }
+        if (current_graph_node->attrs_.empty() == false)
+        {
+            LOG(INFO) << "load model: " << current_graph_node->name_;
+            current_layer->load_model(current_graph_node->attrs_);
+        }
         current_graph_node->layer_ = current_layer;
-        */
     }
     // topsort the graph, 设置execute_time来表示每个节点的执行顺序
     size_t global_execute_time = 0;
