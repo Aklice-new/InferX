@@ -4,6 +4,7 @@
 #include "core/allocator.h"
 #include "core/common.h"
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <atomic>
 #include <vector>
@@ -20,23 +21,26 @@ class Tensor
 {
 public:
     explicit Tensor();
-    explicit Tensor(const std::string& name, DataType dtype, std::vector<size_t> shapes);
+    explicit Tensor(const std::string& name, DataType dtype, std::vector<uint32_t> shapes);
+    explicit Tensor(DataType dtype, std::vector<uint32_t> shapes);
     explicit Tensor(
-        DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
+        DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
 
     // 所有的构造函数都转发到这里完成
     void create(
-        DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
+        DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc = false);
 
     void apply_data(std::shared_ptr<Allocator> allocator = CPUAllocatorFactory::get_instance());
 
     DeviceType device_type() const;
 
+    std::shared_ptr<Allocator> allocator() const;
+
     DataType dtype() const;
 
-    size_t size() const;
+    uint32_t size() const;
 
-    std::vector<size_t> shapes() const;
+    std::vector<uint32_t> shapes() const;
 
     StatusCode to_cpu();
 
@@ -47,7 +51,7 @@ public:
     ~Tensor();
 
 private:
-    // static size_t dtype_to_bytes(DataType dtype);
+    // static uint32_t dtype_to_bytes(DataType dtype);
 
     // ref_count ++
     void addref() const;
@@ -62,9 +66,9 @@ private:
 
     void* data_ptr_{nullptr};
     DataType dtype_;
-    size_t dims_; // dimensons of the tensor
-    std::vector<size_t> m_shapes_;
-    std::vector<size_t> m_strides_;
+    uint32_t dims_; // dimensons of the tensor
+    std::vector<uint32_t> m_shapes_;
+    std::vector<uint32_t> m_strides_;
     std::shared_ptr<Allocator> allocator_;
 
 public:
@@ -82,7 +86,11 @@ public:
         return static_cast<T*>(data_ptr_);
     }
 
-    size_t byte_size();
+    void copy_from(const void* src, uint32_t size);
+
+    Tensor reshape(std::vector<uint32_t> dims);
+
+    uint32_t byte_size();
 };
 } // namespace core
 } // namespace inferx

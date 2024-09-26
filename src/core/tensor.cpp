@@ -1,6 +1,7 @@
 #include "core/tensor.h"
 #include "core/allocator.h"
 #include "core/common.h"
+#include <cstdint>
 #include <glog/logging.h>
 #include <atomic>
 #include <cassert>
@@ -12,7 +13,7 @@ namespace inferx
 namespace core
 {
 
-static size_t dtype_to_bytes(DataType dtype)
+static uint32_t dtype_to_bytes(DataType dtype)
 {
     switch (dtype)
     {
@@ -34,23 +35,28 @@ Tensor::Tensor()
     //   不需要做任何处理，因为没有data
 }
 
-Tensor::Tensor(const std::string& name, DataType dtype, std::vector<size_t> shapes)
+Tensor::Tensor(const std::string& name, DataType dtype, std::vector<uint32_t> shapes)
 {
     create(dtype, shapes, CPUAllocatorFactory::get_instance(), false);
 }
 
-Tensor::Tensor(DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
+Tensor::Tensor(DataType dtype, std::vector<uint32_t> shapes)
+{
+    create(dtype, shapes, CPUAllocatorFactory::get_instance(), false);
+}
+
+Tensor::Tensor(DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
 {
     create(dtype, shapes, allocator, need_alloc);
 }
-void Tensor::create(DataType dtype, std::vector<size_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
+void Tensor::create(DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
 {
     dtype_ = dtype;
     dims_ = shapes.size();
     m_shapes_ = shapes;
     m_strides_.resize(dims_);
     m_strides_[dims_ - 1] = 1;
-    for (size_t i = 1; i < dims_; i++)
+    for (uint32_t i = 1; i < dims_; i++)
     {
         m_strides_[dims_ - 1 - i] = m_shapes_[dims_ - i] * m_strides_[dims_ - i];
     }
@@ -166,6 +172,32 @@ void* Tensor::cpu_data()
         return data_ptr_;
     }
 }
+
+void Tensor::copy_from(const void* src, uint32_t size)
+{
+    apply_data(allocator_);
+
+    if (device_type() == DeviceType::DeviceType_CPU)
+        allocator_->memcpy(data_ptr_, src, size, MemcpyKind::HostToHost);
+    else
+    {
+        allocator_->memcpy(data_ptr_, src, size, MemcpyKind::DeviceToHost);
+    }
+}
+
+Tensor Tensor::reshape(std::vector<uint32_t> dims)
+{
+    Tensor newTensor = *this;
+    newTensor.m_shapes_ = dims;
+    newTensor.m_strides_.resize(dims_);
+    newTensor.m_strides_[dims_ - 1] = 1;
+    for (uint32_t i = 1; i < dims_; i++)
+    {
+        newTensor.m_strides_[dims_ - 1 - i] = newTensor.m_shapes_[dims_ - i] * newTensor.m_strides_[dims_ - i];
+    }
+    return newTensor;
+}
+
 /* 模版的实现最好和声明放在一起，否则会出现链接错误
 template <typename T>
 T* Tensor::ptr()
@@ -173,7 +205,7 @@ T* Tensor::ptr()
     return static_cast<T>(data_ptr_);
 }
 */
-size_t Tensor::byte_size()
+uint32_t Tensor::byte_size()
 {
     return dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0];
 }
@@ -183,17 +215,22 @@ DeviceType Tensor::device_type() const
     return allocator_->device_type_;
 }
 
+std::shared_ptr<Allocator> Tensor::allocator() const
+{
+    return allocator_;
+}
+
 DataType Tensor::dtype() const
 {
     return dtype_;
 }
 
-size_t Tensor::size() const
+uint32_t Tensor::size() const
 {
     return m_shapes_[0] * m_strides_[0];
 }
 
-std::vector<size_t> Tensor::shapes() const
+std::vector<uint32_t> Tensor::shapes() const
 {
     return m_shapes_;
 }
@@ -207,7 +244,7 @@ StatusCode Tensor::to_cpu()
     const DeviceType on_where = device_type();
     if (on_where == DeviceType::DeviceType_GPU)
     {
-        size_t size = byte_size();
+        uint32_t size = byte_size();
         void* cpu_data_ptr = nullptr;
         auto cpu_allocator_instance = CPUAllocatorFactory::get_instance();
         cpu_data_ptr = cpu_allocator_instance->allocate(size);
@@ -234,7 +271,7 @@ StatusCode Tensor::to_cuda()
     const DeviceType on_where = device_type();
     if (on_where == DeviceType::DeviceType_CPU)
     {
-        size_t size = byte_size();
+        uint32_t size = byte_size();
         void* cuda_data_ptr = nullptr;
         auto gpu_allocator_instance = GPUAllocatorFactory::get_instance();
         cuda_data_ptr = gpu_allocator_instance->allocate(size);

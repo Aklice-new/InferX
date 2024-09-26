@@ -10,3 +10,6 @@ third_party/spdlog/
 .cache
 
 test/pnnx_test/
+
+.VSCodeCounter/
+.idea/

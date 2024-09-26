@@ -1,6 +1,8 @@
 #include "layer/kernels/maxpooling.h"
 #include "layer/layer_factory.h"
 
+#include <glog/logging.h>
+
 namespace inferx
 {
 namespace layer
@@ -35,10 +37,29 @@ StatusCode MaxPoolingLayer::prepare_layer(
 
 StatusCode MaxPoolingLayer::load_param(const std::map<std::string, pnnx::Parameter>& params)
 {
+    if (params.find("stride") == params.end())
+    {
+        LOG(ERROR) << "MaxPooling operator parameter is none, check your params.";
+        return StatusCode::Failed;
+    }
     stride_h_ = params.at("stride").ai[0];
     stride_w_ = params.at("stride").ai[1];
+
+    if (params.find("padding") == params.end())
+    {
+        LOG(ERROR) << "MaxPooling operator parameter is none, check your params.";
+        return StatusCode::Failed;
+    }
+
     padding_h_ = params.at("padding").ai[0];
     padding_w_ = params.at("padding").ai[1];
+
+    if (params.find("kernel_size") == params.end())
+    {
+        LOG(ERROR) << "MaxPooling operator parameter is none, check your params.";
+        return StatusCode::Failed;
+    }
+
     pooling_size_h_ = params.at("kernel_size").ai[0];
     pooling_size_w_ = params.at("kernel_size").ai[1];
     return StatusCode::Success;

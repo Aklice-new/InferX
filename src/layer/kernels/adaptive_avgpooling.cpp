@@ -1,5 +1,8 @@
 #include "layer/kernels/adaptive_avgpooling.h"
+#include "core/common.h"
 #include "layer/layer_factory.h"
+
+#include <glog/logging.h>
 
 namespace inferx
 {
@@ -35,6 +38,11 @@ StatusCode AdaptiveAvgPoolingLayer::prepare_layer(
 
 StatusCode AdaptiveAvgPoolingLayer::load_param(const std::map<std::string, pnnx::Parameter>& params)
 {
+    if (params.find("output_size") == params.end())
+    {
+        LOG(ERROR) << "AdaptiveAvgPooling operator parameter is none, check your params.";
+        return StatusCode::Failed;
+    }
     output_height_ = params.at("output_size").ai[0];
     output_width_ = params.at("output_size").ai[1];
     return StatusCode::Success;
