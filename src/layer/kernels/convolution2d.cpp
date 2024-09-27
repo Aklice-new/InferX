@@ -1,5 +1,16 @@
+/**
+ * @file convolution2d.cpp
+ * @author Aklice (you@domain.com)
+ * @brief
+ * @version 0.1
+ * @date 2024-09-26
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
 #include "layer/kernels/convolution2d.h"
 #include "core/common.h"
+#include "layer/layer_factory.h"
 
 #include <glog/logging.h>
 
@@ -147,6 +158,12 @@ StatusCode Convolution2DLayer::load_model(const std::map<std::string, pnnx::Attr
 
     return StatusCode::Success;
 }
+Layer* createConvolution2DInstance(std::string layer_name)
+{
+    return new Convolution2DLayer(layer_name);
+}
+
+LayerRegisterWrapper Convolution2DLayer_Register(createConvolution2DInstance, "nn.Conv2d");
 
 } // namespace layer
 } // namespace inferx

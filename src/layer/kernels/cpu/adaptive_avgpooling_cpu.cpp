@@ -1,6 +1,5 @@
 #include "core/common.h"
 #include "layer/kernels/adaptive_avgpooling.h"
-#include <cstdint>
 
 namespace inferx
 {

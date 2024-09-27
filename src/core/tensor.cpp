@@ -198,6 +198,17 @@ Tensor Tensor::reshape(std::vector<uint32_t> dims)
     return newTensor;
 }
 
+void Tensor::Reshape(std::vector<uint32_t> dims)
+{
+    m_shapes_ = dims;
+    m_strides_.resize(dims_);
+    m_strides_[dims_ - 1] = 1;
+    for (uint32_t i = 1; i < dims_; i++)
+    {
+        m_strides_[dims_ - 1 - i] = m_shapes_[dims_ - i] * m_strides_[dims_ - i];
+    }
+}
+
 /* 模版的实现最好和声明放在一起，否则会出现链接错误
 template <typename T>
 T* Tensor::ptr()

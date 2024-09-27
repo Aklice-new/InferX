@@ -122,8 +122,8 @@ public:
 protected:
     DeviceType device_type_;
     std::string layer_name_;
-    std::vector<Tensor> weights_; // include all tensor param
-                                  // all non-tensor param should be declare in specified layer
+    // std::vector<Tensor> weights_; // include all tensor param
+    //                               // all non-tensor param should be declare in specified layer
     std::vector<Tensor::TensorPtr> inputs_;
     std::vector<Tensor::TensorPtr> outputs_;
 };

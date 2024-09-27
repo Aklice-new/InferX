@@ -90,6 +90,8 @@ public:
 
     Tensor reshape(std::vector<uint32_t> dims);
 
+    void Reshape(std::vector<uint32_t> dims);
+
     uint32_t byte_size();
 };
 } // namespace core

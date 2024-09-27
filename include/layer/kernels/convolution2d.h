@@ -1,10 +1,8 @@
 #ifndef _CONVOLUTION_2D_H_
 #define _CONVOLUTION_2D_H_
 
-#include "core/allocator.h"
 #include "core/tensor.h"
 #include "core/common.h"
-#include "core/allocator.h"
 #include "layer/layer.h"
 #include <cstdint>
 

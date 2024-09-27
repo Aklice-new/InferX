@@ -101,7 +101,7 @@ StatusCode Convolution2DLayer::forward_cpu()
 {
     auto input = inputs_[0];
     auto output = outputs_[0];
-    auto weight = weights_[0];
+    const auto weight = weights_[0];
     auto bias = bias_[0];
 
     auto kernel_h = kernel_h_;
@@ -133,7 +133,7 @@ StatusCode Convolution2DLayer::forward_cpu()
     // reshape weight to col
     // weight shape: out_channels, in_channels / groups, kernel_h, kernel_w
     // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
-    Tensor weight_col = weight->reshape({out_channels_, (in_channels_ / groups_) * kernel_h * kernel_w});
+    weight->Reshape(weight_col_shapes);
     for (uint32_t b = 0; b < batch; b++)
     {
         // im2col
@@ -147,13 +147,13 @@ StatusCode Convolution2DLayer::forward_cpu()
         // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
         // bias shape: out_channels
         // output shape: out_channels, output_h * output_w
-        gemm_with_bais_cpu(img_col->ptr<float>(), weight_col.ptr<float>(), bias->ptr<float>(), out_channels_,
+        gemm_with_bais_cpu(img_col->ptr<float>(), weight->ptr<float>(), bias->ptr<float>(), out_channels_,
             output_h_ * output_w_, in_channels_ * kernel_h * kernel_w,
             output->ptr<float>() + b * out_channels_ * output_h_ * output_w_);
     }
     // col2im
     // output shape: N, out_channels, output_h, output_w
-    output->reshape(output_shapes);
+    output->Reshape(output_shapes);
     return StatusCode::Success;
 }
 
