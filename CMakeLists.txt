@@ -1,19 +1,32 @@
 cmake_minimum_required(VERSION 3.16)
-project(InferX LANGUAGES CXX CUDA)
+project(InferX LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+if(CMAKE_BUILD_TYPE MATCHES "Debug")
+  set(CMAKE_CXX_FLAGS " -g -O0 ${CMAKE_CXX_FLAGS}")
+else()
+  set(CMAKE_CXX_FLAGS " -O3 -g ${CMAKE_CXX_FLAGS}")
+endif()
 
+option(ENABLE_CUDA "Enable CUDA" ON)
+
+if(ENABLE_CUDA)
+    enable_language(CUDA)
+    add_definitions(-DENABLE_CUDA)
+    set(CMAKE_CUDA_STANDARD 17)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_EXTENSIONS OFF)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+    include(cmake/cuda.cmake)
+endif()
 
 #########################
 ## Find Dependencies
 #########################
 
 
-include(cmake/cuda.cmake)
 include(cmake/FindGlog.cmake)
 
 # cutlass
@@ -32,22 +45,26 @@ file(GLOB SRC_FILES
         src/layer/*.cpp
         src/layer/kernels/*.cpp 
         src/layer/kernels/cpu/*.cpp 
-        src/layer/kernels/cuda/*.cu)
-
+        src/layer/kernels/cuda/*.cu
+        src/parser/*.cpp)
 
 add_library(InferX SHARED ${SRC_FILES})
-target_link_libraries(InferX CUDA::cudart CUDA::cublas ${GLOG_LIBRARIES})
-
+if(ENABLE_CUDA)
+    target_link_libraries(InferX CUDA::cudart CUDA::cublas ${GLOG_LIBRARIES})
+else()
+    target_link_libraries(InferX ${GLOG_LIBRARIES})
+endif()
 
 #####################################################
 ### test 
 #####################################################
 
 macro(add_test name)
-    add_executable(${name} test/${name}.cpp)
+    add_executable(${name} test/${name}/${name}.cpp)
     target_link_libraries(${name} InferX)
 endmacro()
 
 add_test(test_tensor)
 add_test(test_graph)
+add_test(test_parser)
 

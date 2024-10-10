@@ -178,10 +178,10 @@ void Tensor::copy_from(const void* src, uint32_t size)
     apply_data(allocator_);
 
     if (device_type() == DeviceType::DeviceType_CPU)
-        allocator_->memcpy(data_ptr_, src, size, MemcpyKind::HostToHost);
+        allocator_->memcpy(data_ptr_, src, size * dtype_to_bytes(dtype_), MemcpyKind::HostToHost);
     else
     {
-        allocator_->memcpy(data_ptr_, src, size, MemcpyKind::DeviceToHost);
+        allocator_->memcpy(data_ptr_, src, size * dtype_to_bytes(dtype_), MemcpyKind::DeviceToHost);
     }
 }
 

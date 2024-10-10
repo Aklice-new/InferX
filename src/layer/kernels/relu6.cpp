@@ -17,7 +17,7 @@ Layer* createRelu6Instance(std::string layer_name)
     return new Relu6Layer(layer_name);
 }
 
-LayerRegisterWrapper Relu6Layer_Register(createRelu6Instance, "nn.Relu");
+LayerRegisterWrapper Relu6Layer_Register(createRelu6Instance, "nn.Relu6");
 
 } // namespace layer
 } // namespace inferx

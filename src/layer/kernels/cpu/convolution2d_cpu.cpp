@@ -83,19 +83,16 @@ void gemm_with_bais_cpu(
     }
 }
 
-template <typename Dtype>
-void col2im()
-{
-}
+// template <>
+// void im2col_cpu<float>(const float* input_data, const uint32_t input_channels, const uint32_t input_h,
+//     const uint32_t input_w, const uint32_t kernel_h, const uint32_t kernel_w, const uint32_t stride_h,
+//     const uint32_t stride_w, const uint32_t dilation_h, const uint32_t dilation_w, const uint32_t padding_h,
+//     const uint32_t padding_w, const uint32_t output_h, const uint32_t output_w, float* output_data);
 
-template <>
-void im2col_cpu<float>(const float* input_data, const uint32_t input_channels, const uint32_t input_h,
-    const uint32_t input_w, const uint32_t kernel_h, const uint32_t kernel_w, const uint32_t stride_h,
-    const uint32_t stride_w, const uint32_t dilation_h, const uint32_t dilation_w, const uint32_t padding_h,
-    const uint32_t padding_w, const uint32_t output_h, const uint32_t output_w, float* output_data);
-template <>
-void gemm_with_bais_cpu<float>(
-    const float* A, const float* B, const float* bias, const uint32_t M, const uint32_t N, const uint32_t K, float* D);
+// template <>
+// void gemm_with_bais_cpu<float>(
+//     const float* A, const float* B, const float* bias, const uint32_t M, const uint32_t N, const uint32_t K, float*
+//     D);
 
 StatusCode Convolution2DLayer::forward_cpu()
 {
@@ -139,15 +136,15 @@ StatusCode Convolution2DLayer::forward_cpu()
         // im2col
         // input shape: N, C, H, W
         // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
-        im2col_cpu(input->ptr<float>() + b * in_channels_ * input_w * input_h, in_channels_, input_h, input_w, kernel_h,
-            kernel_w, stride_h, stride_w, dilation_h, dilation_w, padding_h, padding_w, output_h_, output_w_,
+        im2col_cpu<float>(input->ptr<float>() + b * in_channels_ * input_w * input_h, in_channels_, input_h, input_w,
+            kernel_h, kernel_w, stride_h, stride_w, dilation_h, dilation_w, padding_h, padding_w, output_h_, output_w_,
             img_col->ptr<float>());
         // gemm with bias
         // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
         // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
         // bias shape: out_channels
         // output shape: out_channels, output_h * output_w
-        gemm_with_bais_cpu(img_col->ptr<float>(), weight->ptr<float>(), bias->ptr<float>(), out_channels_,
+        gemm_with_bais_cpu<float>(img_col->ptr<float>(), weight->ptr<float>(), bias->ptr<float>(), out_channels_,
             output_h_ * output_w_, in_channels_ * kernel_h * kernel_w,
             output->ptr<float>() + b * out_channels_ * output_h_ * output_w_);
     }

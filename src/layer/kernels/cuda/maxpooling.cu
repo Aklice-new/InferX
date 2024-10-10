@@ -1,6 +1,5 @@
 #include "core/common.h"
 #include "layer/kernels/maxpooling.h"
-#include <__clang_cuda_builtin_vars.h>
 #include <cstdint>
 #include <limits>
 
@@ -51,25 +50,20 @@ __global__ void max_pooling_kernel(DType* input_data, DType* output_data, uint32
     output_data[output_row * oW + output_col] = max_value;
 } // namespace layer
 
-StatusCode CUDAMaxPooling_ForwardImp(const Tensor::TensorPtr input, Tensor::TensorPtr output)
+StatusCode CUDAMaxPooling_ForwardImp(const Tensor::TensorPtr input, Tensor::TensorPtr output, uint32_t padding_h,
+    uint32_t padding_w, uint32_t kernel_h, uint32_t kernel_w, uint32_t stride_h, uint32_t stride_w)
 {
     DataType dtype = input->dtype();
-    auto in_shape = input->shape();
-    auto out_shape = output->shape();
+    auto in_shape = input->shapes();
+    auto out_shape = output->shapes();
     const uint32_t iN = in_shape[0];
     const uint32_t iC = in_shape[1];
     const uint32_t iH = in_shape[2];
     const uint32_t iW = in_shape[3];
     const uint32_t oH = out_shape[2];
     const uint32_t oW = out_shape[3];
-    const uint32_t padding_h_ = this->padding_h_;
-    const uint32_t padding_w_ = this->padding_w_;
-    const uint32_t kernel_h_ = this->pooling_size_h_;
-    const uint32_t kernel_w_ = this->pooling_size_w_;
-    const uint32_t stride_h_ = this->stride_h_;
-    const uint32_t stride_w_ = this->stride_w_;
-    const uint32_t input_padded_h = iH + 2 * padding_h_;
-    const uint32_t input_padded_w = iW + 2 * padding_w_;
+    const uint32_t input_padded_h = iH + 2 * padding_h;
+    const uint32_t input_padded_w = iW + 2 * padding_w;
 
     /*
     关于线程和对应处理的数据的划分参考的是pytorch中的实现，大致的逻辑如下：
@@ -80,15 +74,13 @@ StatusCode CUDAMaxPooling_ForwardImp(const Tensor::TensorPtr input, Tensor::Tens
     然后每个线程负责计算一个output中元素的值
     */
     dim3 grid(iN * iC);
-    dim3 block(
-        CEIL_DIV(input_padded_h - kernel_h_ + 1, stride_h_), CEIL_DIV(input_padded_w - kernel_w_ + 1, stride_w_));
+    dim3 block(CEIL_DIV(input_padded_h - kernel_h + 1, stride_h), CEIL_DIV(input_padded_w - kernel_w + 1, stride_w));
 
     switch (dtype)
     {
     case DataType::DataTypeFloat32:
-        max_pooling_kernel<float><<<grid, block>>>(input->ptr<float>(), output->ptr<float>(), iH, iW, oH, oW,
-            padding_h_, padding_w_, kernel_h_, kernel_w_, stride_h_, stride_w_, input_padded_h, input_padded_w, iH * iW,
-            oH * oW);
+        max_pooling_kernel<float><<<grid, block>>>(input->ptr<float>(), output->ptr<float>(), iH, iW, oH, oW, padding_h,
+            padding_w, kernel_h, kernel_w, stride_h, stride_w, input_padded_h, input_padded_w, iH * iW, oH * oW);
         break;
     }
     return StatusCode::Success;

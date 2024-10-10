@@ -10,6 +10,7 @@
  */
 #include "layer/kernels/expression.h"
 #include "core/common.h"
+#include "layer/layer_factory.h"
 
 #include <glog/logging.h>
 
@@ -21,14 +22,7 @@ ExpressionLayer::ExpressionLayer(const std::string& name)
     : Layer(name)
 {
 }
-StatusCode ExpressionLayer::forward_cpu()
-{
-    return StatusCode::Success;
-}
-StatusCode ExpressionLayer::forward_gpu()
-{
-    return StatusCode::Success;
-}
+
 StatusCode ExpressionLayer::prepare_layer(
     const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs)
 {
@@ -59,8 +53,17 @@ StatusCode ExpressionLayer::load_param(const std::map<std::string, pnnx::Paramet
         return StatusCode::Failed;
     }
     expression_ = params.at("expr").s;
+    parser_ = std::make_unique<ExpressionParser>(expression_);
+    parser_->GenerateSyntaxTree();
     return StatusCode::Success;
 }
+
+Layer* createExpressionLayerInstance(std::string layer_name)
+{
+    return new ExpressionLayer(layer_name);
+}
+
+LayerRegisterWrapper ExpressionLayer_Register(createExpressionLayerInstance, "pnnx.Expression");
 
 } // namespace layer
 } // namespace inferx

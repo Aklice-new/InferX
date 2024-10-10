@@ -12,6 +12,7 @@
 #include "core/common.h"
 #include "layer/layer_factory.h"
 
+#include <cstdint>
 #include <glog/logging.h>
 
 namespace inferx
@@ -135,7 +136,8 @@ StatusCode Convolution2DLayer::load_model(const std::map<std::string, pnnx::Attr
         // set bias
         CHECK_EQ(out_channels_, bias_shape[0]) << "Convolution2D bias shape must be the same as out_channels.";
         this->bias_.resize(1);
-        this->bias_[0] = std::make_shared<Tensor>(out_channels_);
+        std::vector<uint32_t> bias_shape_32 = {uint32_t(bias_shape[0])};
+        this->bias_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, bias_shape_32);
         this->bias_[0]->copy_from(bias.data(), out_channels_);
     }
 
@@ -151,8 +153,9 @@ StatusCode Convolution2DLayer::load_model(const std::map<std::string, pnnx::Attr
     CHECK_EQ(out_channels_, weights_shape[0]) << "Convolution2D weight shape[0] must be equal to out_channels.";
 
     this->weights_.resize(1);
-    this->weights_[0]
-        = std::make_shared<Tensor>(weights_shape[0], weights_shape[1], weights_shape[2], weights_shape[3]);
+    std::vector<uint32_t> weight_shape = {
+        uint32_t(weights_shape[0]), uint32_t(weights_shape[1]), uint32_t(weights_shape[2]), uint32_t(weights_shape[3])};
+    this->weights_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, weight_shape);
     this->weights_[0]->copy_from(
         weights.data(), weights_shape[0] * weights_shape[1] * weights_shape[2] * weights_shape[3]);
 

@@ -3,7 +3,7 @@
 #include "core/status.h"
 #include "utils.h"
 
-#include <cuda_runtime_api.h>
+#include <cuda_runtime.h>
 #include <spdlog/spdlog.h>
 
 namespace inferx

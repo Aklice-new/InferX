@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstdint>
 #include <glog/logging.h>
 #include <memory>
 #include <string>
@@ -80,10 +81,10 @@ void Graph::process_in_edges(const std::vector<pnnx::Operand*>& inputs, const st
     {
         const pnnx::Operator* producer = input->producer;
         graph_op->inputs_.push_back(input->name); // 保存输入连接的节点
-        std::vector<size_t> dims;
+        std::vector<uint32_t> dims;
         for (auto dim : input->shape)
         {
-            dims.push_back(static_cast<size_t>(dim));
+            dims.push_back(static_cast<uint32_t>(dim));
         }
         auto in_edge = std::make_shared<GraphEdge>();
         in_edge->producer_name_ = producer->name;

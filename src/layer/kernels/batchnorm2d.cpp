@@ -15,6 +15,7 @@
 
 #include <cstdint>
 #include <glog/logging.h>
+#include <sys/types.h>
 
 namespace inferx
 {
@@ -24,6 +25,28 @@ namespace layer
 BatchNorm2DLayer::BatchNorm2DLayer(std::string name)
     : Layer(name)
 {
+}
+
+StatusCode BatchNorm2DLayer::prepare_layer(
+    const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs)
+{
+    this->inputs_ = inputs;
+    this->outputs_ = outputs;
+    for (auto input : this->inputs_)
+    {
+        if (input->raw_ptr() == nullptr)
+        {
+            input->apply_data();
+        }
+    }
+    for (auto output : this->outputs_)
+    {
+        if (output->raw_ptr() == nullptr)
+        {
+            output->apply_data();
+        }
+    }
+    return StatusCode::Success;
 }
 
 StatusCode BatchNorm2DLayer::load_param(const std::map<std::string, pnnx::Parameter>& params)
@@ -51,8 +74,9 @@ StatusCode BatchNorm2DLayer::load_model(const std::map<std::string, pnnx::Attrib
         LOG(ERROR) << "BatchNorm operator attribute running_mean is none, check your model.";
         return StatusCode::Failed;
     }
+    std::vector<uint32_t> num_features_shape = {num_features_};
     // load mean values
-    mean_ = std::make_shared<Tensor>(num_features_);
+    mean_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, num_features_shape);
     auto mean_ptr = reinterpret_cast<const float*>(attributes.at("running_mean").data.data());
     mean_->copy_from(mean_ptr, num_features_);
     if (attributes.find("running_var") == attributes.end())
@@ -61,7 +85,7 @@ StatusCode BatchNorm2DLayer::load_model(const std::map<std::string, pnnx::Attrib
         return StatusCode::Failed;
     }
     // load variance values
-    var_ = std::make_shared<Tensor>(num_features_);
+    var_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, num_features_shape);
     auto var_ptr = reinterpret_cast<const float*>(attributes.at("running_var").data.data());
     var_->copy_from(var_ptr, num_features_);
 

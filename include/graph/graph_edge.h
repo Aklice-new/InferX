@@ -21,7 +21,7 @@ public:
     std::string producer_name_;
     std::string name_;
     Tensor::TensorPtr tensor_;
-    std::vector<size_t> dims_;
+    std::vector<uint32_t> dims_;
     DataType dtype_;
 };
 } // namespace graph

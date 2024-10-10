@@ -14,11 +14,14 @@
 
 #include "core/common.h"
 #include "layer/layer.h"
+#include "parser/parser.h"
 
 namespace inferx
 {
 namespace layer
 {
+using namespace inferx::parser;
+
 class ExpressionLayer : public Layer
 {
 public:
@@ -32,6 +35,7 @@ public:
 
 private:
     std::string expression_;
+    std::unique_ptr<ExpressionParser> parser_;
 };
 } // namespace layer
 } // namespace inferx

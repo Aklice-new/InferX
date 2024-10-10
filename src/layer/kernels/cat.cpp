@@ -1,15 +1,15 @@
 /**
- * @file flatten.cpp
+ * @file cat.cpp
  * @author Aklice (you@domain.com)
  * @brief
  * @version 0.1
- * @date 2024-09-27
+ * @date 2024-10-09
  *
  * @copyright Copyright (c) 2024
  *
  */
+#include "layer/kernels/cat.h"
 #include "core/common.h"
-#include "layer/kernels/flatten.h"
 #include "layer/layer_factory.h"
 
 #include <glog/logging.h>
@@ -19,12 +19,12 @@ namespace inferx
 namespace layer
 {
 
-FlattenLayer::FlattenLayer(std::string name)
+CatLayer::CatLayer(const std::string& name)
     : Layer(name)
 {
 }
 
-StatusCode FlattenLayer::prepare_layer(
+StatusCode CatLayer::prepare_layer(
     const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs)
 {
     this->inputs_ = inputs;
@@ -46,32 +46,26 @@ StatusCode FlattenLayer::prepare_layer(
     return StatusCode::Success;
 }
 
-StatusCode FlattenLayer::load_param(const std::map<std::string, pnnx::Parameter>& params)
+StatusCode CatLayer::load_param(const std::map<std::string, pnnx::Parameter>& params)
 {
-
-    if (params.find("start_dim") == params.end())
+    if (params.find("dim") == params.end())
     {
-        LOG(ERROR) << "Flatten operator param start_dim is none, check your model.";
+        LOG(ERROR) << "Cat operator parameter dim is none, check your params.";
         return StatusCode::Failed;
     }
-    start_dim_ = params.at("start_dim").ai[0];
-
-    if (params.find("end_dim") == params.end())
-    {
-        LOG(ERROR) << "Flatten operator param end_dim is none, check your model.";
-        return StatusCode::Failed;
-    }
-    end_dim_ = params.at("end_dim").ai[0];
-
+    dim_ = params.at("dim").ai[0];
+    const int input_dims = inputs_[0]->shapes().size();
+    dim_ = dim_ < 0 ? dim_ + input_dims : dim_;
+    CHECK(dim_ >= 0 && dim_ < input_dims) << "Cat operator dim is out of range.";
     return StatusCode::Success;
 }
 
-Layer* createFlattenInstance(std::string layer_name)
+Layer* createCatLayerInstance(std::string layer_name)
 {
-    return new FlattenLayer(layer_name);
+    return new CatLayer(layer_name);
 }
 
-LayerRegisterWrapper FlattenLayer_Register(createFlattenInstance, "torch.flatten");
+LayerRegisterWrapper CatLayer_Register(createCatLayerInstance, "torch.cat");
 
 } // namespace layer
 } // namespace inferx

@@ -24,7 +24,7 @@ std::shared_ptr<LayerRegister::LayerCreateTable> LayerRegister::get_table()
     return LayerRegister::layer_table_;
 }
 
-void LayerRegister::register_layer_creator(const std::string& layer_name, LayerCreateFunc& creator)
+void LayerRegister::register_layer_creator(const std::string& layer_name, const LayerCreateFunc& creator)
 {
     CHECK(!layer_name.empty());
     CHECK(creator != nullptr);
@@ -40,7 +40,8 @@ std::shared_ptr<Layer> LayerRegister::create_layer(const std::string& layer_name
 
     const auto& creator = layer_table->at(layer_name);
     CHECK(creator != nullptr) << "Not find the crespond creator";
-    auto layer_ptr = std::make_shared<Layer>(creator(layer_name));
+    auto raw_ptr = creator(layer_name);
+    auto layer_ptr = std::shared_ptr<Layer>(raw_ptr);
     CHECK(layer_ptr != nullptr) << "Create layer " << layer_name << " failed . ";
     return layer_ptr;
 }

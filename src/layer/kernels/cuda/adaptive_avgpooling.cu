@@ -61,8 +61,8 @@ StatusCode CUDAAdaptiveAvgPooling_ForwardImp(const Tensor::TensorPtr input, Tens
 {
 
     DataType dtype = input->dtype();
-    auto in_shape = input->shape();
-    auto out_shape = output->shape();
+    auto in_shape = input->shapes();
+    auto out_shape = output->shapes();
     uint32_t iN = in_shape[0];
     uint32_t iC = in_shape[1];
     uint32_t iH = in_shape[2];
@@ -95,41 +95,41 @@ StatusCode CUDAAdaptiveAvgPooling_ForwardImp(const Tensor::TensorPtr input, Tens
 
     return StatusCode::NotImplemented;
 }
-{
-    uint32_t iN = in_shape[0];
-    uint32_t iC = in_shape[1];
-    uint32_t iH = in_shape[2];
-    uint32_t iW = in_shape[3];
-    uint32_t oH = out_shape[2];
-    uint32_t oW = out_shape[3];
-    uint32_t iStride = iH * iW;
-    uint32_t oStride = oH * oW;
-    /*
-    NCHW
-    N : gridDim.x
-    C : gridDim.y
-    H : blockDim.x
-    W : blockDim.y
-    */
-    dim3 grid(iN, iC);
-    dim3 block(oH, oW);
-    switch (dtype)
-    {
-    case inferx::core::DataType::DataTypeFloat32:
-        adaptive_avg_pooling_kernel<float><<<grid, block>>>(
-            reinterpret_cast<float*>(input), reinterpret_cast<float*>(output), iH, iW, oH, oW, iStride, oStride);
-        break;
-    case inferx::core::DataType::DataTypeInt32: adaptive_avg_pooling_kernel<int><<<grid, block>>>(); break;
-    default: return StatusCode::NotImplemented;
-    }
+// {
+//     uint32_t iN = in_shape[0];
+//     uint32_t iC = in_shape[1];
+//     uint32_t iH = in_shape[2];
+//     uint32_t iW = in_shape[3];
+//     uint32_t oH = out_shape[2];
+//     uint32_t oW = out_shape[3];
+//     uint32_t iStride = iH * iW;
+//     uint32_t oStride = oH * oW;
+//     /*
+//     NCHW
+//     N : gridDim.x
+//     C : gridDim.y
+//     H : blockDim.x
+//     W : blockDim.y
+//     */
+//     dim3 grid(iN, iC);
+//     dim3 block(oH, oW);
+//     switch (dtype)
+//     {
+//     case inferx::core::DataType::DataTypeFloat32:
+//         adaptive_avg_pooling_kernel<float><<<grid, block>>>(
+//             reinterpret_cast<float*>(input), reinterpret_cast<float*>(output), iH, iW, oH, oW, iStride, oStride);
+//         break;
+//     case inferx::core::DataType::DataTypeInt32: adaptive_avg_pooling_kernel<int><<<grid, block>>>(); break;
+//     default: return StatusCode::NotImplemented;
+//     }
 
-    return StatusCode::NotImplemented;
-}
+//     return StatusCode::NotImplemented;
+// }
 StatusCode AdaptiveAvgPoolingLayer::forward_gpu()
 {
     DataType dtype = inputs_[0]->dtype();
-    auto in_shape = inputs_[0]->shape();
-    auto out_shape = outputs_[0]->shape();
+    auto in_shape = inputs_[0]->shapes();
+    auto out_shape = outputs_[0]->shapes();
     CUDAAdaptiveAvgPooling_ForwardImp(inputs_[0], outputs_[0]);
 
     return StatusCode::Success;

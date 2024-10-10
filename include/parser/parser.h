@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <string>
 #include <memory>
+#include <vector>
 
 namespace inferx
 {
@@ -24,17 +25,18 @@ namespace parser
  * @brief every token type
  *
  */
-enum class TokenType
+enum class TokenType : int
 {
     TokenUnknown = -1,
-    TokenNumber = 0,
-    TokenAdd = 1,
-    TokenSub = 2,
-    TokenMul = 3,
-    TokenDiv = 4,
-    TokenLeftParen = 5,
-    TokenRightParen = 6,
-    TokenStop = 7,
+    TokenTensor,
+    TokenNumber,
+    TokenAdd,
+    TokenMul,
+    TokenDiv,
+    TokenSqrt,
+    TokenLeftParen,
+    TokenRightParen,
+    TokenComma,
 };
 /**
  * @brief every token information, include type, start, end, value
@@ -63,15 +65,52 @@ struct Token
 struct TokenNode
 {
     Token token_;
-    uint32_t tensor_idx_;
     std::shared_ptr<TokenNode> left = nullptr;
     std::shared_ptr<TokenNode> right = nullptr;
     TokenNode() = default;
-    TokenNode(Token token, uint32_t tensor_idx, std::shared_ptr<TokenNode> left, std::shared_ptr<TokenNode> right)
+    TokenNode(Token token, std::shared_ptr<TokenNode> left, std::shared_ptr<TokenNode> right)
         : token_(token)
-        , tensor_idx_(tensor_idx)
         , left(left)
         , right(right){};
+};
+
+/**
+ * @brief Expression Parser
+ *   include lexer, parser, syntax tree
+ */
+class ExpressionParser
+{
+public:
+    explicit ExpressionParser(std::string expression)
+        : expression_(std::move(expression)){};
+
+    /**
+     * @brief 对词法分析的结果进行语法分析，然后生成语法树，再根据语法树的后序遍历生成逆波兰表达式
+     *      https://oi-wiki.org/misc/expression/
+     */
+    std::vector<std::shared_ptr<TokenNode>> GenerateSyntaxTree();
+
+    /**
+     * @brief return the tokenized tokens
+     *
+     */
+
+    const std::vector<Token> GetTokens();
+
+private:
+    /**
+     * @brief 对表达式进行词法分析
+     *
+     */
+    void Tokenize();
+    /**
+     * @brief 递归的生成语法分析树
+     *
+     */
+    std::shared_ptr<TokenNode> GenterateNextNode(uint32_t& idx);
+
+    std::vector<Token> tokens_;
+    std::string expression_;
 };
 
 } // namespace parser
