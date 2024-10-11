@@ -48,6 +48,7 @@ public:
 
     // Tensor(Tensor& tensor) = delete;
     Tensor& operator=(const Tensor& tensor);
+    Tensor clone();
     ~Tensor();
 
 private:

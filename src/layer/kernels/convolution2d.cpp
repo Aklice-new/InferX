@@ -84,13 +84,13 @@ StatusCode Convolution2DLayer::load_param(const std::map<std::string, pnnx::Para
     padding_h_ = params.at("padding").ai[0];
     padding_w_ = params.at("padding").ai[1];
 
-    if (params.find("use_bias") == params.end())
+    if (params.find("bias") == params.end())
     {
-        LOG(ERROR) << "Convolution2D operator parameter use_bias is none, check your params.";
+        LOG(ERROR) << "Convolution2D operator parameter bias is none, check your params.";
         return StatusCode::Failed;
     }
 
-    use_bias_ = params.at("use_bias").b;
+    use_bias_ = params.at("bias").b;
 
     if (params.find("stride") == params.end())
     {

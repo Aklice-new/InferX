@@ -1,11 +1,12 @@
 #include "core/tensor.h"
 #include "core/allocator.h"
 #include "core/common.h"
+#include <cstddef>
 #include <cstdint>
 #include <glog/logging.h>
 #include <atomic>
 #include <cassert>
-#include <cstddef>
+#include <iostream>
 #include <memory>
 
 namespace inferx
@@ -103,6 +104,8 @@ Tensor& Tensor::operator=(const Tensor& other)
     this->allocator_ = other.allocator_;
     this->m_strides_ = other.m_strides_;
     this->m_shapes_ = other.m_shapes_;
+    this->dtype_ = other.dtype_;
+    this->data_ptr_ = other.data_ptr_;
 
     // 加上引用
     if (other.refcount_ptr_)
@@ -110,6 +113,15 @@ Tensor& Tensor::operator=(const Tensor& other)
         other.addref();
     }
     return *this;
+}
+
+Tensor Tensor::clone()
+{
+    Tensor newTensor = *this;
+    newTensor.data_ptr_ = allocator_->allocate(byte_size());
+    newTensor.refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
+    newTensor.copy_from(this->data_ptr_, size());
+    return newTensor;
 }
 
 void Tensor::addref() const
@@ -139,6 +151,7 @@ void Tensor::release()
 
 Tensor::~Tensor()
 {
+    std::cout << "Tensor is destroyed!" << std::endl;
     release();
 }
 
@@ -177,11 +190,19 @@ void Tensor::copy_from(const void* src, uint32_t size)
 {
     apply_data(allocator_);
 
-    if (device_type() == DeviceType::DeviceType_CPU)
-        allocator_->memcpy(data_ptr_, src, size * dtype_to_bytes(dtype_), MemcpyKind::HostToHost);
+    if (this->device_type() == DeviceType::DeviceType_CPU)
+    {
+        allocator_->memcpy(data_ptr_, src, static_cast<size_t>(size * dtype_to_bytes(dtype_)), MemcpyKind::HostToHost);
+    }
+    else if (this->device_type() == DeviceType::DeviceType_GPU)
+    {
+        allocator_->memcpy(
+            data_ptr_, src, static_cast<size_t>(size * dtype_to_bytes(dtype_)), MemcpyKind::DeviceToHost);
+    }
     else
     {
-        allocator_->memcpy(data_ptr_, src, size * dtype_to_bytes(dtype_), MemcpyKind::DeviceToHost);
+        LOG(ERROR) << "Unknown allocator type : " << static_cast<int>(allocator_->get_device_type());
+        LOG(ERROR) << "Unknown device type : " << static_cast<int>(device_type());
     }
 }
 
@@ -223,7 +244,7 @@ uint32_t Tensor::byte_size()
 
 DeviceType Tensor::device_type() const
 {
-    return allocator_->device_type_;
+    return this->allocator_->device_type_;
 }
 
 std::shared_ptr<Allocator> Tensor::allocator() const

@@ -30,9 +30,9 @@ public:
 
     StatusCode load_model(const std::string& bin_path, const std::string& param_path);
 
-    StatusCode infernce();
+    StatusCode infernce(Tensor& output_tensor);
 
-    StatusCode set_input(const Tensor& input_tensor);
+    StatusCode set_input(Tensor& input_tensor);
 
 private:
     void process_in_edges(const std::vector<pnnx::Operand*>& inputs, const std::shared_ptr<GraphNode>& graph_op);

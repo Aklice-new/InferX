@@ -3,52 +3,57 @@
 #include "core/status.h"
 #include "utils.h"
 
-#include <cuda_runtime.h>
-#include <spdlog/spdlog.h>
+#include <cuda.h>
+#include <glog/logging.h>
 
 namespace inferx
 {
 namespace core
 {
 
-void Allocator::memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, cudaStream_t stream, bool is_async)
+void Allocator::memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, bool is_async)
 {
     if (kind == MemcpyKind::HostToHost)
     {
-        ::memcpy(dst, src, size);
+        std::memcpy(dst, src, size);
     }
     else if (kind == MemcpyKind::HostToDevice)
     {
-        if (is_async)
-        {
-            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream));
-        }
-        else
-        {
-            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice));
-        }
+        // std::cout << "HostToDevice" << std::endl;
+        // cudaStream_t stream = nullptr;
+        // LOG(INFO) << "HostToDevice memory copy";
+        // if (is_async)
+        // {
+        //     CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyHostToDevice, stream));
+        // }
+        // else
+        // {
+        CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyHostToDevice));
+        // }
     }
     else if (kind == MemcpyKind::DeviceToHost)
     {
-        if (is_async)
-        {
-            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream));
-        }
-        else
-        {
-            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost));
-        }
+        // cudaStream_t stream = nullptr;
+        // if (is_async)
+        // {
+        //     CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream));
+        // }
+        // else
+        // {
+        CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToHost));
+        // }
     }
     else if (kind == MemcpyKind::DeviceToDevice)
     {
-        if (is_async)
-        {
-            CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream));
-        }
-        else
-        {
-            CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice));
-        }
+        // cudaStream_t stream = nullptr;
+        // if (is_async)
+        // {
+        //     CUDA_CHECK(cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToDevice, stream));
+        // }
+        // else
+        // {
+        CUDA_CHECK(cudaMemcpy(dst, src, size, cudaMemcpyDeviceToDevice));
+        // }
     }
 }
 
@@ -122,7 +127,8 @@ CPUAllocator::~CPUAllocator()
 {
     if (!m_alloc_memory.empty())
     {
-        spdlog::error("FATAL ERROR! Memory is still in use when CPUAllocator is destroyed");
+        // spdlog::error("FATAL ERROR! Memory is still in use when CPUAllocator is destroyed");
+        LOG(ERROR) << "FATAL ERROR! Memory is still in use when CPUAllocator is destroyed";
     }
 
     // free all need-free memory
@@ -198,7 +204,8 @@ void GPUAllocator::release(void* ptr)
     alloc_mutex.lock();
     if (m_alloc_memory.find(ptr) == m_alloc_memory.end())
     {
-        spdlog::error("{} has not been allocated", ptr);
+        // spdlog::error("{} has not been allocated", ptr);
+        LOG(ERROR) << "Failed to release memory, memory has not been allocated";
         // throw Status(StatusCode::Failed, "Failed to release memory, memory has not been allocated");
     }
     size_t size = m_alloc_memory[ptr];
@@ -224,7 +231,8 @@ GPUAllocator::~GPUAllocator()
 {
     if (!m_alloc_memory.empty())
     {
-        spdlog::error("FATAL ERROR! Memory is still in use when GPUAllocator is destroyed");
+        // spdlog::error("FATAL ERROR! Memory is still in use when GPUAllocator is destroyed");
+        LOG(ERROR) << "FATAL ERROR! Memory is still in use when GPUAllocator is destroyed";
     }
 
     // free all need-free memory

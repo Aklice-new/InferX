@@ -8,6 +8,7 @@
 
 #include "graph/graph.h"
 #include "core/common.h"
+#include "core/tensor.h"
 #include "graph/graph_node.h"
 #include "graph/graph_edge.h"
 #include "graph/pnnx/ir.h"
@@ -132,7 +133,6 @@ void Graph::create_graph()
     // 每个GraphEdge对应的就是一个input的tensor
     for (const auto& current_graph_node : this->layers_)
     {
-
         std::vector<Tensor::TensorPtr> input_tensors, output_tensors;
         // 1. 首先处理输入
         for (const auto& in_edge : current_graph_node->in_edges_)
@@ -219,7 +219,7 @@ void Graph::create_graph()
 #ifdef DEBUG
     for (const auto& node : layers_)
     {
-        LOG(INFO) << "layer name: " << node->name_ << " execute time: " << _->execute_time_;
+        LOG(INFO) << "layer name: " << node->name_ << " execute time: " << node->execute_time_;
     }
 #endif
 }
@@ -231,15 +231,38 @@ StatusCode Graph::load_model(const std::string& bin_path, const std::string& par
     return load_model();
 }
 
-StatusCode Graph::infernce()
+StatusCode Graph::infernce(Tensor& output_tensor)
 {
+    LOG(INFO) << "Begin to inference.\n Current graph has " << layers_.size() << " layers";
+
     for (const auto& node : layers_)
     {
-        // node->layer_->forward();
         LOG(INFO) << "layer name: " << node->name_ << " execute time: " << node->execute_time_;
+        if (node->type_ == "pnnx.Input" || node->type_ == "pnnx.Output")
+        {
+            continue;
+        }
+        node->layer_->forward();
     }
+    output_tensor = tensors_map_[std::to_string(tensor_nums_ - 1)]->clone();
     return StatusCode::Success;
 }
 
+StatusCode Graph::set_input(Tensor& input_tensor)
+{
+    /**
+     *  0号index的tensor是输入tensor
+     */
+    if (tensors_map_.find("0") == tensors_map_.end())
+    {
+        LOG(ERROR) << "input tensor not found";
+        return StatusCode::Failed;
+    }
+    auto input = tensors_map_["0"];
+    CHECK(input->shapes() == input_tensor.shapes()) << "input tensor dims not match";
+
+    input->copy_from(input_tensor.raw_ptr(), input_tensor.byte_size());
+    return StatusCode::Success;
+}
 } // namespace graph
 } // namespace inferx

@@ -17,7 +17,7 @@ Layer* createHardSigmoidInstance(std::string layer_name)
     return new HardSigmoidLayer(layer_name);
 }
 
-LayerRegisterWrapper HardSigmoidLayer_Register(createHardSigmoidInstance, "nn.HardSigmoid");
+LayerRegisterWrapper HardSigmoidLayer_Register(createHardSigmoidInstance, "nn.Hardsigmoid");
 
 } // namespace layer
 } // namespace inferx

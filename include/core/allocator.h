@@ -34,7 +34,8 @@ class Buffer;
 enum class DeviceType
 {
     DeviceType_CPU,
-    DeviceType_GPU
+    DeviceType_GPU,
+    DeviceType_UNKNOWN
 };
 
 enum class MemcpyKind
@@ -59,10 +60,9 @@ public:
     virtual void* allocate(size_t size) = 0;
     virtual void release(void* ptr) = 0;
     virtual DeviceType get_device_type() = 0;
-    virtual void memcpy(
-        void* dst, const void* src, size_t size, MemcpyKind kind, cudaStream_t stream = nullptr, bool is_async = false);
+    void memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, bool is_async = false);
     virtual ~Allocator() {}
-    DeviceType device_type_;
+    DeviceType device_type_ = DeviceType::DeviceType_UNKNOWN;
     std::mutex alloc_mutex;
     std::mutex free_mutex;
     mutable std::map<void*, size_t> m_alloc_memory;
@@ -79,7 +79,6 @@ public:
     ~CPUAllocator();
 
 private:
-    DeviceType device_type_ = DeviceType::DeviceType_CPU;
     void* aligned_alloc(size_t size, size_t alignment = 32);
 };
 
@@ -100,7 +99,6 @@ public:
     ~GPUAllocator();
 
 private:
-    DeviceType device_type_ = DeviceType::DeviceType_GPU;
     uint32_t device_id_;
     CudaHandle cuda_handle_;
 };

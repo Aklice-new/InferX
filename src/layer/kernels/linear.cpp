@@ -69,7 +69,7 @@ StatusCode LinearLayer::load_model(const std::map<std::string, pnnx::Attribute>&
         const auto& bias_shape = attributes.at("bias").shape;
         std::vector<uint32_t> bias_shape_32 = {1, in_features_};
         bias_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, bias_shape_32);
-        CHECK_EQ(bias_shape[1], in_features_) << " bias shape should be the same as in_features";
+        CHECK_EQ(bias_shape[0], out_features_) << " bias shape should be the same as in_features";
         bias_->copy_from(bias.data(), in_features_);
     }
 

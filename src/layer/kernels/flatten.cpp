@@ -54,14 +54,14 @@ StatusCode FlattenLayer::load_param(const std::map<std::string, pnnx::Parameter>
         LOG(ERROR) << "Flatten operator param start_dim is none, check your model.";
         return StatusCode::Failed;
     }
-    start_dim_ = params.at("start_dim").ai[0];
+    start_dim_ = params.at("start_dim").i;
 
     if (params.find("end_dim") == params.end())
     {
         LOG(ERROR) << "Flatten operator param end_dim is none, check your model.";
         return StatusCode::Failed;
     }
-    end_dim_ = params.at("end_dim").ai[0];
+    end_dim_ = params.at("end_dim").i;
 
     return StatusCode::Success;
 }
