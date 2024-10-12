@@ -107,7 +107,7 @@ void ExpressionParser::Tokenize()
             {
                 j++;
             }
-            Token token(TokenType::TokenTensor, i, j - 1, expression_.substr(i, j - i));
+            Token token(TokenType::TokenTensor, i + 1, j - 1, expression_.substr(i + 1, j - i));
             tokens_.push_back(token);
             i = j;
         }

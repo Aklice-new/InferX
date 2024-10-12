@@ -48,6 +48,10 @@ Tensor::Tensor(DataType dtype, std::vector<uint32_t> shapes)
 
 Tensor::Tensor(DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
 {
+    if (allocator == nullptr)
+    {
+        allocator = CPUAllocatorFactory::get_instance();
+    }
     create(dtype, shapes, allocator, need_alloc);
 }
 void Tensor::create(DataType dtype, std::vector<uint32_t> shapes, std::shared_ptr<Allocator> allocator, bool need_alloc)
@@ -65,7 +69,7 @@ void Tensor::create(DataType dtype, std::vector<uint32_t> shapes, std::shared_pt
     allocator_ = allocator;
     if (need_alloc)
     {
-        data_ptr_ = allocator_->allocate(byte_size());
+        data_ptr_ = allocator_->allocate(static_cast<size_t>(byte_size()));
         refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
     }
 }
@@ -74,7 +78,7 @@ void Tensor::apply_data(std::shared_ptr<Allocator> allocator)
 {
     if (data_ptr_ == nullptr)
     {
-        data_ptr_ = allocator->allocate(byte_size());
+        data_ptr_ = allocator->allocate(static_cast<size_t>(byte_size()));
         refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
     }
     else
@@ -118,7 +122,7 @@ Tensor& Tensor::operator=(const Tensor& other)
 Tensor Tensor::clone()
 {
     Tensor newTensor = *this;
-    newTensor.data_ptr_ = allocator_->allocate(byte_size());
+    newTensor.data_ptr_ = allocator_->allocate(static_cast<size_t>(byte_size()));
     newTensor.refcount_ptr_ = std::make_shared<std::atomic<int>>(1);
     newTensor.copy_from(this->data_ptr_, size());
     return newTensor;
@@ -151,7 +155,7 @@ void Tensor::release()
 
 Tensor::~Tensor()
 {
-    std::cout << "Tensor is destroyed!" << std::endl;
+    // std::cout << "Tensor is destroyed!" << std::endl;
     release();
 }
 
@@ -279,8 +283,8 @@ StatusCode Tensor::to_cpu()
         uint32_t size = byte_size();
         void* cpu_data_ptr = nullptr;
         auto cpu_allocator_instance = CPUAllocatorFactory::get_instance();
-        cpu_data_ptr = cpu_allocator_instance->allocate(size);
-        cpu_allocator_instance->memcpy(cpu_data_ptr, data_ptr_, size, MemcpyKind::HostToDevice);
+        cpu_data_ptr = cpu_allocator_instance->allocate(static_cast<size_t>(size));
+        cpu_allocator_instance->memcpy(cpu_data_ptr, data_ptr_, static_cast<size_t>(size), MemcpyKind::HostToDevice);
         allocator_->release(data_ptr_); // 释放GPU上的内存
         data_ptr_ = cpu_data_ptr;
         allocator_ = cpu_allocator_instance;
@@ -306,8 +310,8 @@ StatusCode Tensor::to_cuda()
         uint32_t size = byte_size();
         void* cuda_data_ptr = nullptr;
         auto gpu_allocator_instance = GPUAllocatorFactory::get_instance();
-        cuda_data_ptr = gpu_allocator_instance->allocate(size);
-        gpu_allocator_instance->memcpy(cuda_data_ptr, data_ptr_, size, MemcpyKind::HostToDevice);
+        cuda_data_ptr = gpu_allocator_instance->allocate(static_cast<size_t>(size));
+        gpu_allocator_instance->memcpy(cuda_data_ptr, data_ptr_, static_cast<size_t>(size), MemcpyKind::HostToDevice);
         allocator_->release(data_ptr_); // 释放CPU上的内存
         data_ptr_ = cuda_data_ptr;
         allocator_ = gpu_allocator_instance;

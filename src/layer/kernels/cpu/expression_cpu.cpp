@@ -60,7 +60,7 @@ StatusCode ExpressionLayer::forward_cpu()
 {
 
     CHECK(parser_ != nullptr) << "Parser is null.";
-    const auto inverse_polish_notation = parser_->GenerateSyntaxTree();
+    const auto inverse_polish_notation = inverse_polish_notation_; // parser_->GenerateSyntaxTree();
     CHECK(!inverse_polish_notation.empty()) << "Inverse polish notation is empty, check your expression.";
     using VariantType = std::variant<Tensor::TensorPtr, int>;
     std::stack<VariantType> op_stack;

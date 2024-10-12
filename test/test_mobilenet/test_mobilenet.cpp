@@ -6,6 +6,8 @@
 #include "opencv2/imgproc.hpp"
 
 #include <string>
+#include <iostream>
+
 using namespace inferx;
 
 int main()
@@ -19,8 +21,9 @@ int main()
     img.convertTo(img, CV_32FC3);
     std::vector<cv::Mat> channel_imgs;
     cv::split(img, channel_imgs);
-
+    std::cout << channel_imgs.size() << std::endl;
     core::Tensor input_tensor = core::Tensor(core::DataType::DataTypeFloat32, std::vector<uint32_t>{1, 3, 224, 224});
+    input_tensor.apply_data();
     // convert to nchw, now is nhwc
     for (int i = 0; i < 3; i++)
     {

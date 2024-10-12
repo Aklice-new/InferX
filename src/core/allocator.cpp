@@ -80,6 +80,10 @@ void* CPUAllocator::allocate(size_t size)
             m_free_memory.erase(it);
         }
         free_mutex.unlock();
+
+        alloc_mutex.lock();
+        m_alloc_memory.insert({ptr, size});
+        alloc_mutex.unlock();
         return ptr;
     }
     free_mutex.unlock();
@@ -109,7 +113,7 @@ void CPUAllocator::release(void* ptr)
     {
         throw new Status(StatusCode::Failed, "Failed to release memory, memory has not been allocated");
     }
-    size_t size = m_alloc_memory[ptr];
+    size_t size = m_alloc_memory.at(ptr);
     m_alloc_memory.erase(ptr);
     alloc_mutex.unlock();
 

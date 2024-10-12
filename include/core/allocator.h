@@ -65,7 +65,7 @@ public:
     DeviceType device_type_ = DeviceType::DeviceType_UNKNOWN;
     std::mutex alloc_mutex;
     std::mutex free_mutex;
-    mutable std::map<void*, size_t> m_alloc_memory;
+    mutable std::unordered_map<void*, size_t> m_alloc_memory;
     mutable std::map<size_t, std::vector<void*>> m_free_memory;
 };
 

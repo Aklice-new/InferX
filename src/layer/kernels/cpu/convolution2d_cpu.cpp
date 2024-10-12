@@ -20,7 +20,7 @@ void im2col_cpu(const Dtype* input_data, const uint32_t input_channels, const ui
 {
     const uint32_t channel_size = input_h * input_w;
     const uint32_t kernel_size = kernel_h * kernel_w;
-    for (uint32_t c = 0; c < channel_size; c++, input_data += channel_size)
+    for (uint32_t c = 0; c < input_channels; c++, input_data += channel_size)
     {
         // 遍历kernel中每一个元素
         for (uint32_t kernel_row = 0; kernel_row < kernel_h; kernel_row++)
@@ -121,12 +121,12 @@ StatusCode Convolution2DLayer::forward_cpu()
     this->output_h_ = (input_h + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) / stride_h + 1;
     this->output_w_ = (input_w + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stride_w + 1;
 
-    auto output_shapes = {batch, out_channels_, output_h_, output_w_};
-    auto img_col_shapes = {output_h_ * output_w_, in_channels_ * kernel_h_ * kernel_w_};
-    auto weight_col_shapes = {out_channels_, (in_channels_ / groups_) * kernel_h_ * kernel_w_};
+    std::vector<uint32_t> output_shapes = {batch, out_channels_, output_h_, output_w_};
+    std::vector<uint32_t> img_col_shapes = {output_h_ * output_w_, in_channels_ * kernel_h_ * kernel_w_};
+    std::vector<uint32_t> weight_col_shapes = {out_channels_, (in_channels_ / groups_) * kernel_h_ * kernel_w_};
     Tensor::TensorPtr img_col = std::make_shared<Tensor>(input->dtype(), img_col_shapes);
     // make sure the col_buffer is on the same device with input
-    img_col->apply_data(input->allocator());
+    img_col->apply_data();
     // reshape weight to col
     // weight shape: out_channels, in_channels / groups, kernel_h, kernel_w
     // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w

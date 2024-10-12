@@ -54,7 +54,7 @@ StatusCode ExpressionLayer::load_param(const std::map<std::string, pnnx::Paramet
     }
     expression_ = params.at("expr").s;
     parser_ = std::make_unique<ExpressionParser>(expression_);
-    parser_->GenerateSyntaxTree();
+    inverse_polish_notation_ = parser_->GenerateSyntaxTree();
     return StatusCode::Success;
 }
 

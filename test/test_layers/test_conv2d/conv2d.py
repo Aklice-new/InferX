@@ -2,10 +2,10 @@ import torch
 from torch import tensor
 
 
-in_channels = 1
-out_channels = 1
-# weight = torch.randn(out_channels, in_channels, 3, 3)
-weight = torch.arange(out_channels * in_channels * 3 * 3).reshape(out_channels, in_channels, 3, 3)
+in_channels = 3
+out_channels = 5
+weight = torch.randn(out_channels, in_channels, 3, 3)
+# weight = torch.arange(out_channels * in_channels * 3 * 3).reshape(out_channels, in_channels, 3, 3)
 bias = torch.randn(out_channels)  
 stride = [1, 1]
 padding = [1, 1]
@@ -50,7 +50,8 @@ def img2col(input : tensor):
                                 data_ptr += 1
                             input_col += stride_w
                     input_row += stride_h
-    img_col = img_col.reshape(out_h * out_w, in_channels * kernel_h * kernel_w)
+    
+    img_col = img_col.reshape(in_channels * kernel_h * kernel_w, out_h * out_w)
     return img_col
 
 def cpu_conv2d(input : tensor):
@@ -64,19 +65,19 @@ def cpu_conv2d(input : tensor):
         img_col = img2col(img_b)
         # img_col : [out_h * out_w, in_channels * kernel_h * kernel_w]
         # weight_col : [out_channels, in_channels * kernel_h * kernel_w]
-        print("img_col shape", img_col.shape)
-        print("weight_col shape", weight_col.shape)
-        print("img_b", img_b)
-        print("img_col", img_col)
-        print("weight_col", weight_col)
-        out = torch.matmul(weight_col, img_col.T) # + bias
+        # print("img_col shape", img_col.shape)
+        # print("weight_col shape", weight_col.shape)
+        # print("img_b", img_b)
+        # print("img_col", img_col.transpose(0, 1))
+        # print("weight_col", weight_col)
+        out = torch.matmul(weight_col, img_col) + bias.reshape(-1, 1)
         out = out.reshape(out_channels, out_h, out_w)
         conv_out[b] = out
     return conv_out
     
 
 def torch_conv2d(input : tensor):
-    return torch.conv2d(input=input, weight=weight, stride=stride, padding=padding, dilation=dilation, groups=groups)
+    return torch.conv2d(input=input, weight=weight,bias=bias, stride=stride, padding=padding, dilation=dilation, groups=groups)
 
 def check(a, b):
     a = a.reshape(-1)
@@ -86,10 +87,11 @@ def check(a, b):
             print("Error: {} != {}".format(a[i], b[i]))
             return
     assert torch.allclose(a, b, atol=1e-4), "Error: {} != {}".format(a, b)
+    print("Success, no error")
 
 if __name__ == '__main__':
-    input = torch.arange(1 * in_channels * 9 * 9).reshape(1, in_channels , 9, 9)
-    # input = torch.randn(1, in_channels, 9, 9)
+    # input = torch.arange(1 * in_channels * 9 * 9).reshape(1, in_channels , 9, 9)
+    input = torch.randn(1, in_channels, 9, 9)
     my_o = cpu_conv2d(input)
     torch_o = torch_conv2d(input)
     print("my_o shape", my_o.shape)

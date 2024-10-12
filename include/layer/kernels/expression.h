@@ -36,6 +36,7 @@ public:
 private:
     std::string expression_;
     std::unique_ptr<ExpressionParser> parser_;
+    std::vector<std::shared_ptr<TokenNode>> inverse_polish_notation_;
 };
 } // namespace layer
 } // namespace inferx
