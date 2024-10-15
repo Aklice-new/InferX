@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
-#include <iostream>
 
 #include <glog/logging.h>
 
@@ -14,7 +13,7 @@ namespace parser
 
 std::vector<std::shared_ptr<TokenNode>> ExpressionParser::GenerateSyntaxTree()
 {
-    LOG(INFO) << "Begin to GenerateSyntaxTree";
+    // LOG(INFO) << "Begin to GenerateSyntaxTree";
     std::vector<std::shared_ptr<TokenNode>> inverse_polish_notation;
     // tokenize
     Tokenize();
@@ -45,7 +44,7 @@ void ExpressionParser::Tokenize()
     运算数字： [0-9]+
     变量（输入）： @[0-9]+
     */
-    LOG(INFO) << "Begin to Tokenize.";
+    // LOG(INFO) << "Begin to Tokenize.";
     tokens_.clear();
     CHECK(!expression_.empty()) << "Expression is empty, please check your input.";
 

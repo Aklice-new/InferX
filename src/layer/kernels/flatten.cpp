@@ -12,7 +12,9 @@
 #include "layer/kernels/flatten.h"
 #include "layer/layer_factory.h"
 
+#include <cstdint>
 #include <glog/logging.h>
+#include <sys/types.h>
 
 namespace inferx
 {
@@ -54,15 +56,28 @@ StatusCode FlattenLayer::load_param(const std::map<std::string, pnnx::Parameter>
         LOG(ERROR) << "Flatten operator param start_dim is none, check your model.";
         return StatusCode::Failed;
     }
-    start_dim_ = params.at("start_dim").i;
+    int start_dim = params.at("start_dim").i;
 
     if (params.find("end_dim") == params.end())
     {
         LOG(ERROR) << "Flatten operator param end_dim is none, check your model.";
         return StatusCode::Failed;
     }
-    end_dim_ = params.at("end_dim").i;
 
+    int end_dim = params.at("end_dim").i;
+    int total_dim = 4;
+    if (start_dim < 0)
+    {
+        start_dim = total_dim + start_dim;
+    }
+    start_dim_ = static_cast<uint32_t>(start_dim);
+    if (end_dim < 0)
+    {
+        end_dim = total_dim + end_dim;
+    }
+    end_dim_ = static_cast<uint32_t>(end_dim);
+
+    // LOG(INFO) << "Flatten operator param start_dim: " << start_dim_ << " end_dim: " << end_dim_;
     return StatusCode::Success;
 }
 

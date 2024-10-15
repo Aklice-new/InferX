@@ -78,7 +78,7 @@ StatusCode BatchNorm2DLayer::load_model(const std::map<std::string, pnnx::Attrib
     // load mean values
     mean_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, num_features_shape);
     auto mean_ptr = reinterpret_cast<const float*>(attributes.at("running_mean").data.data());
-    mean_->copy_from(mean_ptr, num_features_);
+    mean_->copy_from(reinterpret_cast<const void*>(mean_ptr), num_features_);
     if (attributes.find("running_var") == attributes.end())
     {
         LOG(ERROR) << "BatchNorm operator attribute running_var is none, check your model.";
@@ -87,7 +87,7 @@ StatusCode BatchNorm2DLayer::load_model(const std::map<std::string, pnnx::Attrib
     // load variance values
     var_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, num_features_shape);
     auto var_ptr = reinterpret_cast<const float*>(attributes.at("running_var").data.data());
-    var_->copy_from(var_ptr, num_features_);
+    var_->copy_from(reinterpret_cast<const void*>(var_ptr), num_features_);
 
     if (attributes.find("weight") == attributes.end())
     {

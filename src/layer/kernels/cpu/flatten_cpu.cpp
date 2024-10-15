@@ -33,15 +33,6 @@ StatusCode FlattenLayer::forward_cpu()
     uint32_t end_dim = end_dim_;
     uint32_t total_dim = 4;
 
-    if (start_dim < 0)
-    {
-        start_dim = total_dim + start_dim;
-    }
-    if (end_dim < 9)
-    {
-        end_dim = total_dim + end_dim;
-    }
-
     CHECK_GT(end_dim, start_dim) << "The end_dim should be greater than start_dim";
     CHECK_LT(end_dim, 4) << "The end_dim should be less than 4";
     CHECK_GE(start_dim, 1) << "The start dim should should be greater equal than 1";

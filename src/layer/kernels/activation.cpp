@@ -16,6 +16,20 @@ StatusCode ActivationLayer::prepare_layer(
 {
     this->inputs_ = inputs;
     this->outputs_ = outputs;
+    for (auto input : this->inputs_)
+    {
+        if (input->raw_ptr() == nullptr)
+        {
+            input->apply_data();
+        }
+    }
+    for (auto output : this->outputs_)
+    {
+        if (output->raw_ptr() == nullptr)
+        {
+            output->apply_data();
+        }
+    }
     return StatusCode::Success;
 }
 

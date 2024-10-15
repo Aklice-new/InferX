@@ -59,6 +59,7 @@ StatusCode Graph::load_model()
         std::shared_ptr<GraphNode> graph_op = std::make_shared<GraphNode>();
         graph_op->name_ = op->name;
         graph_op->type_ = op->type;
+        graph_op->execute_time_ = -1;
 
         // 通过Operator的输入输出构建计算关系图
         process_in_edges(op->inputs, graph_op);
@@ -105,7 +106,7 @@ void Graph::process_in_edges(const std::vector<pnnx::Operand*>& inputs, const st
         if (tensors_map_.find(input->name) == tensors_map_.end())
         {
             auto tensor = std::make_shared<Tensor>(input->name, in_edge->dtype_, dims);
-            LOG(INFO) << "create tensor: " << input->name;
+            // LOG(INFO) << "create tensor: " << input->name;
             tensors_map_.insert({input->name, tensor});
             // tensors_.push_back(tensor);
         }
@@ -159,12 +160,12 @@ void Graph::create_graph()
         // 4. 设置layer的 params and attrs
         if (current_graph_node->params_.empty() == false)
         {
-            LOG(INFO) << "load param: " << current_graph_node->name_;
+            // LOG(INFO) << "load param: " << current_graph_node->name_;
             current_layer->load_param(current_graph_node->params_);
         }
         if (current_graph_node->attrs_.empty() == false)
         {
-            LOG(INFO) << "load model: " << current_graph_node->name_;
+            // LOG(INFO) << "load model: " << current_graph_node->name_;
             current_layer->load_model(current_graph_node->attrs_);
         }
         current_graph_node->layer_ = current_layer;
@@ -261,7 +262,7 @@ StatusCode Graph::set_input(Tensor& input_tensor)
     auto input = tensors_map_["0"];
     CHECK(input->shapes() == input_tensor.shapes()) << "input tensor dims not match";
 
-    input->copy_from(input_tensor.raw_ptr(), input_tensor.byte_size());
+    input->copy_from(input_tensor.raw_ptr(), static_cast<size_t>(input_tensor.size()));
     return StatusCode::Success;
 }
 } // namespace graph

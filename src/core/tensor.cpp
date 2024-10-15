@@ -6,7 +6,6 @@
 #include <glog/logging.h>
 #include <atomic>
 #include <cassert>
-#include <iostream>
 #include <memory>
 
 namespace inferx
@@ -150,12 +149,11 @@ void Tensor::release()
         // refcount_ptr_.reset(); 智能指针可以自动释放，所以这里应该不用。
     }
 
-    data_ptr_ = 0;
+    data_ptr_ = nullptr;
 }
 
 Tensor::~Tensor()
 {
-    // std::cout << "Tensor is destroyed!" << std::endl;
     release();
 }
 

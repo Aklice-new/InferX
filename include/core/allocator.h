@@ -79,7 +79,7 @@ public:
     ~CPUAllocator();
 
 private:
-    void* aligned_alloc(size_t size, size_t alignment = 32);
+    void* aligned_alloc(size_t size, size_t alignment = 16);
 };
 
 class GPUAllocator : public Allocator

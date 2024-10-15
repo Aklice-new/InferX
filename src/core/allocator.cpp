@@ -80,7 +80,6 @@ void* CPUAllocator::allocate(size_t size)
             m_free_memory.erase(it);
         }
         free_mutex.unlock();
-
         alloc_mutex.lock();
         m_alloc_memory.insert({ptr, size});
         alloc_mutex.unlock();
@@ -100,6 +99,8 @@ void* CPUAllocator::aligned_alloc(size_t size, size_t alignment)
 {
     void* ptr = nullptr;
     if (posix_memalign(&ptr, alignment, size) != 0)
+    // std::cout << "Allocate memory from system, size : " << size;
+    // if ((ptr = ::malloc(size)) == nullptr)
     {
         throw new Status(StatusCode::Failed, "Failed to allocate memory");
     }

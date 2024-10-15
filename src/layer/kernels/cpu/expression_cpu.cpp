@@ -125,6 +125,7 @@ StatusCode ExpressionLayer::forward_cpu()
                 }
                 else
                 {
+                    LOG(INFO) << typeid(left).name() << " " << typeid(right).name();
                     LOG(ERROR) << "Mul operator needs two tensor operband.";
                 }
             }

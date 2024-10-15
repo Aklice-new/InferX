@@ -60,7 +60,7 @@ StatusCode LinearLayer::forward_cpu()
     const auto weight_shape = this->weight_->shapes();
     CHECK(weight_shape.size() == 2) << "Linear operator weight shape must be 2.";
     CHECK(weight_shape[1] == M) << "Linear operator weight shape must be [K, M].";
-    const auto K = weight_shape[1];
+    const auto K = weight_shape[0];
 
     gemv_with_bias<float>(input->ptr<float>(), this->weight_->ptr<float>(), this->bias_->ptr<float>(),
         output->ptr<float>(), M, K, use_bias_);

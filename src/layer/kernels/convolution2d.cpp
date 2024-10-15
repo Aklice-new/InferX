@@ -138,7 +138,7 @@ StatusCode Convolution2DLayer::load_model(const std::map<std::string, pnnx::Attr
         this->bias_.resize(1);
         std::vector<uint32_t> bias_shape_32 = {uint32_t(bias_shape[0])};
         this->bias_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, bias_shape_32);
-        this->bias_[0]->copy_from(bias.data(), out_channels_);
+        this->bias_[0]->copy_from(reinterpret_cast<const void*>(bias.data()), out_channels_);
     }
 
     // weight_shape : outchannels * in_channels * kernel_h * kernel_w
@@ -156,9 +156,9 @@ StatusCode Convolution2DLayer::load_model(const std::map<std::string, pnnx::Attr
     std::vector<uint32_t> weight_shape = {
         uint32_t(weights_shape[0]), uint32_t(weights_shape[1]), uint32_t(weights_shape[2]), uint32_t(weights_shape[3])};
     this->weights_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, weight_shape);
-    this->weights_[0]->copy_from(
-        weights.data(), weights_shape[0] * weights_shape[1] * weights_shape[2] * weights_shape[3]);
-
+    this->weights_[0]->copy_from(reinterpret_cast<const void*>(weights.data()),
+        weights_shape[0] * weights_shape[1] * weights_shape[2] * weights_shape[3]);
+    // LOG(INFO) << " check weights_ " << this->weights_[0]->raw_ptr();
     return StatusCode::Success;
 }
 Layer* createConvolution2DInstance(std::string layer_name)

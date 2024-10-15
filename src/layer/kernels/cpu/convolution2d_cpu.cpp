@@ -78,7 +78,7 @@ void gemm_with_bais_cpu(
             {
                 sum += A[m * K + k] * B[k * N + n];
             }
-            D[m * M + n] = sum + bias[m];
+            D[m * N + n] = sum + bias[n];
         }
     }
 }
@@ -117,36 +117,51 @@ StatusCode Convolution2DLayer::forward_cpu()
     auto input_h = input_shapes[2];
     auto input_w = input_shapes[3];
     uint32_t batch = input_shapes[0];
+    uint32_t group_size = in_channels_ / groups_;
     // https://pytorch.org/docs/stable/generated/torch.nn.Conv2d.html
     this->output_h_ = (input_h + 2 * padding_h - dilation_h * (kernel_h - 1) - 1) / stride_h + 1;
     this->output_w_ = (input_w + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stride_w + 1;
 
     std::vector<uint32_t> output_shapes = {batch, out_channels_, output_h_, output_w_};
-    std::vector<uint32_t> img_col_shapes = {output_h_ * output_w_, in_channels_ * kernel_h_ * kernel_w_};
-    std::vector<uint32_t> weight_col_shapes = {out_channels_, (in_channels_ / groups_) * kernel_h_ * kernel_w_};
-    Tensor::TensorPtr img_col = std::make_shared<Tensor>(input->dtype(), img_col_shapes);
+    std::vector<uint32_t> img_col_shapes = {output_h_ * output_w_, group_size * kernel_h_ * kernel_w_};
+    std::vector<uint32_t> weight_col_shapes = {out_channels_ / groups_, group_size * kernel_h_ * kernel_w_};
+    Tensor::TensorPtr img_col = std::make_shared<Tensor>(DataTypeFloat32, img_col_shapes);
+
     // make sure the col_buffer is on the same device with input
     img_col->apply_data();
+
+    // output->Reshape(output_shapes);
     // reshape weight to col
     // weight shape: out_channels, in_channels / groups, kernel_h, kernel_w
     // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
-    weight->Reshape(weight_col_shapes);
+    // weight->Reshape(weight_col_shapes);
     for (uint32_t b = 0; b < batch; b++)
     {
-        // im2col
-        // input shape: N, C, H, W
-        // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
-        im2col_cpu<float>(input->ptr<float>() + b * in_channels_ * input_w * input_h, in_channels_, input_h, input_w,
-            kernel_h, kernel_w, stride_h, stride_w, dilation_h, dilation_w, padding_h, padding_w, output_h_, output_w_,
-            img_col->ptr<float>());
-        // gemm with bias
-        // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
-        // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
-        // bias shape: out_channels
-        // output shape: out_channels, output_h * output_w
-        gemm_with_bais_cpu<float>(img_col->ptr<float>(), weight->ptr<float>(), bias->ptr<float>(), out_channels_,
-            output_h_ * output_w_, in_channels_ * kernel_h * kernel_w,
-            output->ptr<float>() + b * out_channels_ * output_h_ * output_w_);
+        for (uint32_t g = 0; g < groups_; g++)
+        {
+            // im2col
+            // input shape: N, C, H, W
+            // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
+            Tensor::TensorPtr weight_col = std::make_shared<Tensor>(DataTypeFloat32, weight_col_shapes);
+            // weight_col->apply_data();
+            im2col_cpu<float>(
+                input->ptr<float>() + b * in_channels_ * input_w * input_h + group_size * g * input_w * input_h,
+                group_size, input_h, input_w, kernel_h, kernel_w, stride_h, stride_w, dilation_h, dilation_w, padding_h,
+                padding_w, output_h_, output_w_, img_col->ptr<float>());
+            weight_col->copy_from(reinterpret_cast<const void*>(weight->ptr<float>()
+                                      + g * (out_channels_ / groups_) * group_size * kernel_h * kernel_w),
+                (out_channels_ / groups_) * group_size * kernel_h * kernel_w);
+            // gemm with bias
+            // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
+            // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
+            // bias shape: out_channels
+            // output shape: out_channels, output_h * output_w
+            gemm_with_bais_cpu<float>(img_col->ptr<float>(), weight_col->ptr<float>(),
+                bias->ptr<float>() + g * (out_channels_ / groups_), output_h_ * output_w_, out_channels_ / groups_,
+                group_size * kernel_h * kernel_w,
+                output->ptr<float>() + b * (output_h_ * output_w_ * out_channels_)
+                    + g * (out_channels_ / groups_) * output_h_ * output_w_);
+        }
     }
     // col2im
     // output shape: N, out_channels, output_h, output_w
