@@ -244,6 +244,20 @@ uint32_t Tensor::byte_size()
     return dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0];
 }
 
+void Tensor::broadcast(std::vector<uint32_t> new_shapes)
+{
+    // TODO : broadcast
+    return;
+    // m_shapes_ = new_shapes;
+    // m_strides_.resize(new_shapes.size());
+    // m_strides_[new_shapes.size() - 1] = 1;
+    // for (uint32_t i = 1; i < new_shapes.size(); i++)
+    // {
+    //     m_strides_[new_shapes.size() - 1 - i] = new_shapes[new_shapes.size() - i] * m_strides_[new_shapes.size() -
+    //     i];
+    // }
+}
+
 DeviceType Tensor::device_type() const
 {
     return this->allocator_->device_type_;

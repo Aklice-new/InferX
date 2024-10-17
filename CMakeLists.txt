@@ -70,4 +70,5 @@ add_test(test_tensor)
 add_test(test_graph)
 add_test(test_parser)
 add_test(test_mobilenet)
+add_test(test_resnet)
 

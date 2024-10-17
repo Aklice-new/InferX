@@ -46,7 +46,7 @@ StatusCode MaxPoolingLayer::forward_cpu()
                         for (int j = 0; j < kernel_w_; j++)
                         {
                             float current_value = std::numeric_limits<float>::lowest();
-                            if (i + r >= padding_h_ && w + c >= padding_w_ && i + r < h + padding_h_
+                            if (i + r >= padding_h_ && j + c >= padding_w_ && i + r < h + padding_h_
                                 && j + c < w + padding_w_)
                             {
                                 current_value = input_data_ptr[(i + r - padding_h_) * w + j + c - padding_w_];

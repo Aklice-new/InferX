@@ -94,6 +94,8 @@ public:
     void Reshape(std::vector<uint32_t> dims);
 
     uint32_t byte_size();
+
+    void broadcast(std::vector<uint32_t> shape);
 };
 } // namespace core
 } // namespace inferx

@@ -238,12 +238,17 @@ StatusCode Graph::infernce(Tensor& output_tensor)
 
     for (const auto& node : layers_)
     {
-        LOG(INFO) << "layer name: " << node->name_ << " execute time: " << node->execute_time_;
+        // LOG(INFO) << "layer name: " << node->name_ << " execute order: " << node->execute_time_;
+
         if (node->type_ == "pnnx.Input" || node->type_ == "pnnx.Output")
         {
             continue;
         }
+        auto start_time = std::chrono::high_resolution_clock::now();
         node->layer_->forward();
+        auto end_time = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> diff = end_time - start_time;
+        LOG(INFO) << "layer name: " << node->name_ << " execute time: " << diff.count() * 1000 << " ms";
     }
     output_tensor = tensors_map_[std::to_string(tensor_nums_ - 1)]->clone();
     return StatusCode::Success;

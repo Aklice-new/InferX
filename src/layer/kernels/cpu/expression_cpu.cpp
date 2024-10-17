@@ -52,6 +52,23 @@ void tensor_element_sqrt(DType* input1, DType* output, size_t size)
     }
 }
 
+std::vector<uint32_t> broadcast_shapes(std::vector<uint32_t>& shapes1, std::vector<uint32_t>& shapes2)
+{
+    // TODO: add some broadcast rules checking
+    std::vector<uint32_t> broadcast_shape;
+    auto size1 = shapes1.size();
+    auto size2 = shapes2.size();
+    auto max_size = std::max(size1, size2);
+    for (size_t i = 0; i < max_size; i++)
+    {
+        auto shape1 = i < size1 ? shapes1[i] : 1;
+        auto shape2 = i < size2 ? shapes2[i] : 1;
+        auto shape = std::max(shape1, shape2);
+        broadcast_shape.push_back(shape);
+    }
+    return broadcast_shape;
+}
+
 /**
  * @brief 根据逆波兰式计算表达式
  *
@@ -85,24 +102,35 @@ StatusCode ExpressionLayer::forward_cpu()
             op_stack.pop();
             auto left = op_stack.top();
             op_stack.pop();
-            using R_T = std::decay_t<decltype(right)>;
-            using L_T = std::decay_t<decltype(left)>;
+            // using R_T = std::decay_t<decltype(right)>;
+            // using L_T = std::decay_t<decltype(left)>;
 
             Tensor::TensorPtr output = nullptr;
 
             if (node->token_.type == TokenType::TokenAdd)
             {
-                if constexpr (std::is_same<L_T, Tensor::TensorPtr>::value
-                    && std::is_same<R_T, Tensor::TensorPtr>::value)
+                if (std::holds_alternative<Tensor::TensorPtr>(left) && std::holds_alternative<Tensor::TensorPtr>(right))
                 {
                     auto tensor1 = std::get<Tensor::TensorPtr>(left);
                     auto tensor2 = std::get<Tensor::TensorPtr>(right);
                     auto shape1 = tensor1->shapes();
                     auto shape2 = tensor2->shapes();
-                    CHECK(shape1 == shape2) << "Add operator needs two tensor operband with same shape.";
-                    output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
-                    tensor_element_add<float>(
-                        tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    if (shape1 == shape2)
+                    {
+                        output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
+                        output->apply_data();
+                        tensor_element_add<float>(
+                            tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    }
+                    else
+                    {
+                        LOG(INFO) << "Begin to broadcast tensor.";
+                        auto broadcast_shape = broadcast_shapes(shape1, shape2);
+                        tensor1->broadcast(broadcast_shape);
+                        tensor2->broadcast(broadcast_shape);
+                        tensor_element_add<float>(
+                            tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    }
                 }
                 else
                 {
@@ -111,17 +139,28 @@ StatusCode ExpressionLayer::forward_cpu()
             }
             else if (node->token_.type == TokenType::TokenMul)
             {
-                if constexpr (std::is_same<L_T, Tensor::TensorPtr>::value
-                    && std::is_same<R_T, Tensor::TensorPtr>::value)
+                if (std::holds_alternative<Tensor::TensorPtr>(left) && std::holds_alternative<Tensor::TensorPtr>(right))
                 {
                     auto tensor1 = std::get<Tensor::TensorPtr>(left);
                     auto tensor2 = std::get<Tensor::TensorPtr>(right);
                     auto shape1 = tensor1->shapes();
                     auto shape2 = tensor2->shapes();
-                    CHECK(shape1 == shape2) << "Add operator needs two tensor operband with same shape.";
-                    output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
-                    tensor_element_mul<float>(
-                        tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    if (shape1 == shape2)
+                    {
+                        output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
+                        output->apply_data();
+                        tensor_element_mul<float>(
+                            tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    }
+                    else
+                    {
+                        LOG(INFO) << "Begin to broadcast tensor.";
+                        auto broadcast_shape = broadcast_shapes(shape1, shape2);
+                        tensor1->broadcast(broadcast_shape);
+                        tensor2->broadcast(broadcast_shape);
+                        tensor_element_mul<float>(
+                            tensor1->ptr<float>(), tensor2->ptr<float>(), output->ptr<float>(), tensor1->size());
+                    }
                 }
                 else
                 {
@@ -131,12 +170,13 @@ StatusCode ExpressionLayer::forward_cpu()
             }
             else if (node->token_.type == TokenType::TokenDiv)
             {
-                if constexpr (std::is_same<L_T, Tensor::TensorPtr>::value && std::is_same<R_T, int>::value)
+                if (std::holds_alternative<Tensor::TensorPtr>(left) && std::holds_alternative<int>(right))
                 {
                     auto tensor1 = std::get<Tensor::TensorPtr>(left);
                     auto int_value = std::get<int>(right);
                     auto shape1 = tensor1->shapes();
                     output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
+                    output->apply_data();
                     tensor_element_div<float>(tensor1->ptr<float>(), int_value, output->ptr<float>(), tensor1->size());
                 }
                 else
@@ -159,6 +199,7 @@ StatusCode ExpressionLayer::forward_cpu()
                 auto tensor1 = std::get<Tensor::TensorPtr>(right);
                 auto shape1 = tensor1->shapes();
                 output = std::make_shared<Tensor>(DataType::DataTypeFloat32, shape1);
+                output->apply_data();
                 tensor_element_sqrt<float>(tensor1->ptr<float>(), output->ptr<float>(), tensor1->size());
             }
             else
