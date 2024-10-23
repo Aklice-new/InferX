@@ -1,7 +1,7 @@
 #include "core/allocator.h"
 #include "core/common.h"
 #include "core/status.h"
-#include "utils.h"
+#include "utils/utils.h"
 
 #include <cuda.h>
 #include <glog/logging.h>

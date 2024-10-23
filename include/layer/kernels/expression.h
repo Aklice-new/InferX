@@ -21,10 +21,25 @@ namespace inferx
 namespace layer
 {
 using namespace inferx::parser;
-
+/**
+ * @brief 现在支持的运算如下：
+    tensor + tensor
+    tensor * tensor
+    tensor / num
+    sqrt(tensor)
+    当然后续还可以继续支持其他
+ *
+ */
 class ExpressionLayer : public Layer
 {
 public:
+    enum BinaryOP
+    {
+        ADD_OP,
+        SUB_OP,
+        MUL_OP,
+        DIV_OP
+    };
     explicit ExpressionLayer(const std::string& name);
     virtual ~ExpressionLayer() = default;
     StatusCode forward_cpu() override;

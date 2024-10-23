@@ -42,6 +42,8 @@ public:
 
     std::vector<uint32_t> shapes() const;
 
+    std::vector<uint32_t> strides() const;
+
     StatusCode to_cpu();
 
     StatusCode to_cuda();
@@ -87,6 +89,12 @@ public:
         return static_cast<T*>(data_ptr_);
     }
 
+    template <typename T>
+    T* const_ptr() const
+    {
+        return static_cast<T*>(data_ptr_);
+    }
+
     void copy_from(const void* src, uint32_t size);
 
     Tensor reshape(std::vector<uint32_t> dims);
@@ -95,7 +103,12 @@ public:
 
     uint32_t byte_size();
 
-    void broadcast(std::vector<uint32_t> shape);
+    /**
+     * @brief will return a view share the same data with the original tensor
+     *        the diffrence is that the view tensor will have a different shape
+     *       and strides, the strides is very important.
+     */
+    Tensor broadcast(std::vector<uint32_t> real_shape, std::vector<uint32_t> is_broadcast);
 };
 } // namespace core
 } // namespace inferx

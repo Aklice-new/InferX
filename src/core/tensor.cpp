@@ -218,7 +218,7 @@ Tensor Tensor::reshape(std::vector<uint32_t> dims)
     {
         newTensor.m_strides_[dims_ - 1 - i] = newTensor.m_shapes_[dims_ - i] * newTensor.m_strides_[dims_ - i];
     }
-    return newTensor;
+    return std::move(newTensor);
 }
 
 void Tensor::Reshape(std::vector<uint32_t> dims)
@@ -244,18 +244,28 @@ uint32_t Tensor::byte_size()
     return dtype_to_bytes(dtype_) * m_shapes_[0] * m_strides_[0];
 }
 
-void Tensor::broadcast(std::vector<uint32_t> new_shapes)
+Tensor Tensor::broadcast(std::vector<uint32_t> real_shape, std::vector<uint32_t> is_broadcast)
 {
     // TODO : broadcast
-    return;
-    // m_shapes_ = new_shapes;
-    // m_strides_.resize(new_shapes.size());
-    // m_strides_[new_shapes.size() - 1] = 1;
-    // for (uint32_t i = 1; i < new_shapes.size(); i++)
-    // {
-    //     m_strides_[new_shapes.size() - 1 - i] = new_shapes[new_shapes.size() - i] * m_strides_[new_shapes.size() -
-    //     i];
-    // }
+    const auto& old_shapes = shapes();
+    uint32_t new_size = 1;
+    for (auto shape : real_shape)
+    {
+        new_size *= shape;
+    }
+    CHECK(new_size == size()) << "Broadcast error, the size of two tensor is different, can't do broadcast.";
+    Tensor new_tensor = *this;
+    // 在上面这个拷贝构造过程中关键的属性都已经完成了复制
+    // 重要的是m_shapes_是广播后的shape，同时m_strides_有所不同
+    new_tensor.Reshape(real_shape);
+    std::vector<uint32_t> new_strides;
+    // 将广播出来的那些维度的strides数值置为0
+    for (int i = 0; i < dims_; i++)
+    {
+        m_strides_[i] *= (1 ^ is_broadcast[i]);
+    }
+
+    return std::move(new_tensor);
 }
 
 DeviceType Tensor::device_type() const
@@ -281,6 +291,11 @@ uint32_t Tensor::size() const
 std::vector<uint32_t> Tensor::shapes() const
 {
     return m_shapes_;
+}
+
+std::vector<uint32_t> Tensor::strides() const
+{
+    return m_strides_;
 }
 
 StatusCode Tensor::to_cpu()

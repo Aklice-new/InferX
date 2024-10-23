@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 
+#include <glog/logging.h>
 using namespace inferx;
 
 int main()
@@ -38,7 +39,22 @@ int main()
     graph.load_model();
     graph.set_input(input_tensor);
     core::Tensor output_tensor;
+    auto start = std::chrono::high_resolution_clock::now();
     graph.infernce(output_tensor);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> diff = end - start;
+    LOG(INFO) << "Inference time: " << diff.count() * 1000 << " ms";
+    int max_id = -1;
+    for (uint i = 0; i < output_tensor.size(); i++)
+    {
+        if (max_id == -1 || output_tensor.ptr<float>()[i] > output_tensor.ptr<float>()[max_id])
+        {
+            max_id = i;
+        }
+    }
+    LOG(INFO) << "The max id is " << max_id;
+    LOG(INFO) << "The max value is " << output_tensor.ptr<float>()[max_id];
+    return 0;
 
     return 0;
 }

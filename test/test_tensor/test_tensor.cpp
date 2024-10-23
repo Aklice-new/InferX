@@ -2,7 +2,7 @@
 #include "core/status.h"
 #include "core/tensor.h"
 #include "spdlog/spdlog.h"
-#include "utils.h"
+#include "utils/utils.h"
 #include <cstdio>
 #include <memory>
 
