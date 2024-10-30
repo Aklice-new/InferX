@@ -49,7 +49,7 @@ StatusCode CatLayer::forward_cpu()
 
     std::vector<uint32_t> output_shapes = shapes1;
     output_shapes[dim] = catted_dim;
-    outputs_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, output_shapes);
+    // outputs_[0] = std::make_shared<Tensor>(DataType::DataTypeFloat32, output_shapes);
 
     uint32_t offset = 1;
     for (uint32_t i = dim + 1; i < output_shapes.size(); i++)

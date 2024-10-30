@@ -4,9 +4,11 @@ project(InferX LANGUAGES CXX CUDA)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CUDA_STANDARD 17)
-# set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-# set(CMAKE_CUDA_EXTENSIONS OFF)
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
+
+#########################
+## Debug settings
+#########################
 set(CMAKE_BUILD_TYPE "Debug")
 
 add_definitions(-DENABLE_CUDA)
@@ -18,16 +20,12 @@ else()
 endif()
 
 option(ENABLE_CUDA "Enable CUDA" ON)
-
+option(ENABLE_OpenMP "Enable OpenMP" ON)
+option(ENABLE_examples "Enable examples" ON)
 
 #########################
 ## Find Dependencies
 #########################
-
-# opencv 4.6.0
-set(OpenCV_DIR "/home/aklice/SoftWare/ThirdParty/OpenCV/opencv-4.6.0/build")
-find_package(OpenCV 4.6.0 REQUIRED)
-
 
 include(cmake/cuda.cmake)
 include(cmake/FindGlog.cmake)
@@ -37,6 +35,15 @@ include(cmake/FindGlog.cmake)
 
 # spdlog
 include_directories(${PROJECT_SOURCE_DIR}/third_party/spdlog/include)
+
+if(ENABLE_CUDA)
+    set(LIBS ${LIBS} CUDA::cudart CUDA::cublas)
+endif()
+
+if(ENABLE_OpenMP)
+    find_package(OpenMP REQUIRED)
+    set(LIBS ${LIBS} OpenMP::OpenMP_CXX)
+endif()
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -51,11 +58,14 @@ file(GLOB SRC_FILES
         src/parser/*.cpp)
 
 add_library(InferX SHARED ${SRC_FILES})
-if(ENABLE_CUDA)
-    target_link_libraries(InferX CUDA::cudart CUDA::cublas ${GLOG_LIBRARIES} )
-else()
-    target_link_libraries(InferX ${GLOG_LIBRARIES} )
+target_link_libraries(InferX ${LIBS})
+
+
+if(ENABLE_examples)
+    find_package(OpenCV REQUIRED)
+    include_directories(${OpenCV_INCLUDE_DIRS})
 endif()
+
 
 #####################################################
 ### test 
@@ -66,9 +76,11 @@ macro(add_test name)
     target_link_libraries(${name} InferX ${OpenCV_LIBS})
 endmacro()
 
-add_test(test_tensor)
-add_test(test_graph)
-add_test(test_parser)
-add_test(test_mobilenet)
-add_test(test_resnet)
+if(ENABLE_examples)
+    add_test(test_tensor)
+    add_test(test_graph)
+    add_test(test_parser)
+    add_test(test_mobilenet)
+    add_test(test_resnet)
+endif()
 
