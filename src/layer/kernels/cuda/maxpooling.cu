@@ -23,8 +23,8 @@ __global__ void max_pooling_kernel(DType* input_data, DType* output_data, uint32
     output_data = output_data + oplane * oStride;
     uint32_t i_start_h = threadIdx.x * stride_h_;
     uint32_t i_start_w = threadIdx.y * stride_w_;
-    uint32_t i_end_h = i_start_h + kernel_h_;
-    uint32_t i_end_w = i_start_w + kernel_w_;
+    // uint32_t i_end_h = i_start_h + kernel_h_;
+    // uint32_t i_end_w = i_start_w + kernel_w_;
 
     uint32_t output_row = uint32_t(i_start_h / stride_h_);
 

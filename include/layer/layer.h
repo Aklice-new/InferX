@@ -42,12 +42,12 @@ public:
     {
         if (device_type_ == DeviceType::DeviceType_GPU)
         {
-            this->to_cuda();
+            // this->to_cuda();
             return forward_gpu();
         }
         else
         {
-            this->to_cpu();
+            // this->to_cpu();
             return forward_cpu();
         }
     }

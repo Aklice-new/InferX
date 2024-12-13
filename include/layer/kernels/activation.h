@@ -26,14 +26,12 @@ public:
     ActivationLayer(std::string layer_name);
     virtual ~ActivationLayer() = default;
     // 检查tensor的位置，并转发计算操作到cpu or gpu
+#ifdef ENABLE_CUDA
     StatusCode forward_gpu() override;
+#endif
     StatusCode forward_cpu() override;
     StatusCode prepare_layer(
         const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs) override;
-
-    // 设置加载本层的参数
-    // StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
-    // StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
 
 protected:
     ActivationType activation_type_ = ActivationType::ActivationType_Unknow;

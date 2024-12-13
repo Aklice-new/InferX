@@ -6,6 +6,7 @@
 #include "opencv2/imgproc.hpp"
 
 #include <glog/logging.h>
+#include <opencv2/imgcodecs.hpp>
 #include <string>
 #include <iostream>
 
@@ -26,13 +27,19 @@ int main()
     core::Tensor input_tensor = core::Tensor(core::DataType::DataTypeFloat32, std::vector<uint32_t>{1, 3, 224, 224});
     input_tensor.apply_data();
     // convert to nchw, now is nhwc
+
+    // rgb
+    float means[] = {0.485f, 0.456f, 0.406f};
+    float vars[] = {0.229f, 0.224f, 0.225f};
+
     for (int i = 0; i < 3; i++)
     {
         for (int j = 0; j < 224; j++)
         {
             for (int k = 0; k < 224; k++)
             {
-                input_tensor.ptr<float>()[i * 224 * 224 + j * 224 + k] = channel_imgs[i].at<float>(j, k);
+                input_tensor.ptr<float>()[i * 224 * 224 + j * 224 + k]
+                    = (channel_imgs[i].at<float>(j, k) - means[i]) / vars[i];
             }
         }
     }

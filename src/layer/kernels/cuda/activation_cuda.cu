@@ -1,6 +1,7 @@
 #include "core/common.h"
 #include "layer/kernels/activation.h"
 #include "layer/kernels/unary.h"
+
 namespace inferx
 {
 namespace layer
@@ -33,6 +34,7 @@ StatusCode ActivationLayer::forward_gpu()
     case ActivationType::ActivationType_HardSwish:
         CUDAUnary_HardSigmoid_ForwardImp(inputs_[0]->gpu_data(), outputs_[0]->gpu_data(), size, dtype);
         break;
+    default: return StatusCode::Failed;
     }
     return StatusCode::Success;
 }

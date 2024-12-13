@@ -17,15 +17,18 @@ class Convolution2DLayer : public Layer
 public:
     explicit Convolution2DLayer(std::string layer_name);
     virtual ~Convolution2DLayer();
-    StatusCode forward_gpu() override;
     StatusCode forward_cpu() override;
+#ifdef ENABLE_CUDA
+    StatusCode forward_gpu() override;
+#endif
     StatusCode prepare_layer(
         const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs) override;
 
     StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
     StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
 
-private:
+    // private:
+public:
     bool use_bias_ = false;
 
     uint32_t groups_;

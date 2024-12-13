@@ -1,5 +1,7 @@
 #include "core/common.h"
 #include "layer/kernels/activation.h"
+#include "utils/utils.h"
+#include <glog/logging.h>
 
 namespace inferx
 {
@@ -9,6 +11,7 @@ namespace layer
 template <typename DType>
 void relu(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input[i] > 0 ? input[i] : 0;
@@ -18,6 +21,7 @@ void relu(const DType* input, DType* output, size_t size)
 template <typename DType>
 void relu6(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input[i] > 0 ? (input[i] < 6 ? input[i] : 6) : 0;
@@ -27,15 +31,17 @@ void relu6(const DType* input, DType* output, size_t size)
 template <typename DType>
 void sigmoid(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
-        output[i] = 1 / (1 + exp(-input[i]));
+        output[i] = 1 / (1 + expf(-input[i]));
     }
 }
 
 template <typename DType>
 void silu(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input[i] / (1 + exp(-input[i]));
@@ -45,6 +51,7 @@ void silu(const DType* input, DType* output, size_t size)
 template <typename DType>
 void tanH(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = tanh(input[i]);
@@ -54,6 +61,7 @@ void tanH(const DType* input, DType* output, size_t size)
 template <typename DType>
 void hard_sigmoid(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input[i] > 3 ? 1 : (input[i] < -3 ? 0 : 0.2 * input[i] + 0.5);
@@ -63,6 +71,7 @@ void hard_sigmoid(const DType* input, DType* output, size_t size)
 template <typename DType>
 void hard_swish(const DType* input, DType* output, size_t size)
 {
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input[i] * (input[i] > 3 ? 1 : (input[i] < -3 ? 0 : 0.2 * input[i] + 0.5));

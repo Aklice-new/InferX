@@ -45,9 +45,9 @@ public:
     std::vector<uint32_t> strides() const;
 
     StatusCode to_cpu();
-
+#ifdef ENABLE_CUDA
     StatusCode to_cuda();
-
+#endif
     // Tensor(Tensor& tensor) = delete;
     Tensor& operator=(const Tensor& tensor);
     Tensor clone();
@@ -78,9 +78,9 @@ public:
     using TensorPtr = std::shared_ptr<Tensor>;
 
     void* raw_ptr();
-
+#ifdef ENABLE_CUDA
     void* gpu_data();
-
+#endif
     void* cpu_data();
 
     template <typename T>

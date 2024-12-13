@@ -25,7 +25,9 @@ public:
     PermuteLayer(std::string name);
     ~PermuteLayer() = default;
     StatusCode forward_cpu() override;
+#ifdef ENABLE_CUDA
     StatusCode forward_gpu() override;
+#endif
     StatusCode prepare_layer(
         const std::vector<Tensor::TensorPtr>& inputs, const std::vector<Tensor::TensorPtr>& outputs) override;
     StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;

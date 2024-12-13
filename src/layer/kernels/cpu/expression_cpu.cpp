@@ -1,6 +1,7 @@
 #include "core/common.h"
 #include "core/tensor.h"
 #include "layer/kernels/expression.h"
+#include "utils/utils.h"
 
 #include <cmath>
 #include <cstdint>
@@ -20,7 +21,7 @@ namespace layer
 template <typename DType>
 void tensor_element_add(DType* input1, DType* input2, DType* output, size_t size)
 {
-#pragma omp parallel for num_threads(size)
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input1[i] + input2[i];
@@ -30,7 +31,7 @@ void tensor_element_add(DType* input1, DType* input2, DType* output, size_t size
 template <typename DType>
 void tensor_element_mul(DType* input1, DType* input2, DType* output, size_t size)
 {
-#pragma omp parallel for num_threads(size)
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input1[i] * input2[i];
@@ -39,7 +40,7 @@ void tensor_element_mul(DType* input1, DType* input2, DType* output, size_t size
 template <typename DType>
 void tensor_element_div(DType* input1, int divisor, DType* output, size_t size)
 {
-#pragma omp parallel for num_threads(size)
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = input1[i] / divisor;
@@ -48,7 +49,7 @@ void tensor_element_div(DType* input1, int divisor, DType* output, size_t size)
 template <typename DType>
 void tensor_element_sqrt(DType* input1, DType* output, size_t size)
 {
-#pragma omp parallel for num_threads(size)
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
         output[i] = std::sqrt(input1[i]);

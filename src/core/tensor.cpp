@@ -161,7 +161,7 @@ void* Tensor::raw_ptr()
 {
     return data_ptr_;
 }
-
+#ifdef ENABLE_CUDA
 void* Tensor::gpu_data()
 {
     if (device_type() == DeviceType::DeviceType_GPU)
@@ -174,7 +174,7 @@ void* Tensor::gpu_data()
         return data_ptr_;
     }
 }
-
+#endif
 void* Tensor::cpu_data()
 {
     if (device_type() == DeviceType::DeviceType_CPU)
@@ -325,6 +325,7 @@ StatusCode Tensor::to_cpu()
     return StatusCode::Failed;
 }
 
+#ifdef ENABLE_CUDA
 StatusCode Tensor::to_cuda()
 {
     if (device_type() == DeviceType::DeviceType_GPU)
@@ -351,6 +352,6 @@ StatusCode Tensor::to_cuda()
     }
     return StatusCode::Failed;
 }
-
+#endif
 } // namespace core
 } // namespace inferx

@@ -2,6 +2,9 @@
 #define _UTILS_H_
 
 #include <chrono>
+#include <omp.h>
+#include <string>
+#include <glog/logging.h>
 
 namespace inferx
 {
@@ -34,6 +37,10 @@ namespace inferx
             exit(1);                                                                                                   \
         }                                                                                                              \
     } while (0)
+
+static const int MAX_THREADS = omp_get_max_threads();
+
+void read_data_from_txt(const std::string& file_path, float* data, size_t size);
 
 class Timer
 {
