@@ -21,7 +21,7 @@ namespace inferx
 namespace layer
 {
 
-FlattenLayer::FlattenLayer(std::string name)
+FlattenLayer::FlattenLayer(const std::string name)
     : Layer(name)
 {
 }

@@ -11,6 +11,7 @@
 
 #include "core/common.h"
 #include "layer/kernels/linear.h"
+#include "utils/utils.h"
 
 #include <cstdint>
 #include <glog/logging.h>
@@ -34,7 +35,7 @@ void gemv_with_bias(
     Dtype* input_vec, Dtype* input_matrix, Dtype* input_bias, Dtype* output, uint32_t M, uint32_t K, bool with_bias)
 {
 
-#pragma omp parallel for num_threads(K)
+#pragma omp parallel for num_threads(MAX_THREADS)
     for (uint32_t i = 0; i < K; i++)
     {
         output[i] = 0;
@@ -57,12 +58,12 @@ StatusCode LinearLayer::forward_cpu()
     CHECK(input_shape.size() == 2) << "Linear operator input shape must be 2.";
     CHECK(input_shape[0] == 1) << "Linear operator input shape must be [1, M].";
     const auto M = input_shape[1];
-    const auto weight_shape = this->weight_->shapes();
+    const auto weight_shape = this->weights_->shapes();
     CHECK(weight_shape.size() == 2) << "Linear operator weight shape must be 2.";
     CHECK(weight_shape[1] == M) << "Linear operator weight shape must be [K, M].";
     const auto K = weight_shape[0];
 
-    gemv_with_bias<float>(input->ptr<float>(), this->weight_->ptr<float>(), this->bias_->ptr<float>(),
+    gemv_with_bias<float>(input->ptr<float>(), this->weights_->ptr<float>(), this->bias_->ptr<float>(),
         output->ptr<float>(), M, K, use_bias_);
 
     return StatusCode::Success;

@@ -37,8 +37,7 @@ StatusCode FlattenLayer::forward_cpu()
     CHECK_LT(end_dim, 4) << "The end_dim should be less than 4";
     CHECK_GE(start_dim, 1) << "The start dim should should be greater equal than 1";
 
-    // copy construct, use the same data
-    output = input;
+    output->copy_from(input->raw_ptr(), output->size());
 
     if (start_dim == 1 && end_dim == 3)
     {

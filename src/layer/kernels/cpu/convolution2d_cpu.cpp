@@ -13,14 +13,14 @@ namespace layer
 {
 
 template <typename Dtype>
-void im2col_cpu(const Dtype* input_data, const uint32_t input_channels, const uint32_t input_h, const uint32_t input_w,
+void im2col_cpu(const Dtype* input_data, const uint32_t in_group_size, const uint32_t input_h, const uint32_t input_w,
     const uint32_t kernel_h, const uint32_t kernel_w, const uint32_t stride_h, const uint32_t stride_w,
     const uint32_t dilation_h, const uint32_t dilation_w, const uint32_t padding_h, const uint32_t padding_w,
     const uint32_t output_h, const uint32_t output_w, Dtype* output_data)
 {
     const uint32_t channel_size = input_h * input_w;
     const uint32_t kernel_size = kernel_h * kernel_w;
-    for (uint32_t c = 0; c < input_channels; c++, input_data += channel_size)
+    for (uint32_t c = 0; c < in_group_size; c++, input_data += channel_size)
     {
         // 遍历kernel中每一个元素
         for (uint32_t kernel_row = 0; kernel_row < kernel_h; kernel_row++)
@@ -78,21 +78,10 @@ void gemm_with_bais_cpu(
             {
                 sum += A[m * K + k] * B[k * N + n];
             }
-            D[m * N + n] = sum + bias[n];
+            D[m * N + n] = sum + bias[m];
         }
     }
 }
-
-// template <>
-// void im2col_cpu<float>(const float* input_data, const uint32_t input_channels, const uint32_t input_h,
-//     const uint32_t input_w, const uint32_t kernel_h, const uint32_t kernel_w, const uint32_t stride_h,
-//     const uint32_t stride_w, const uint32_t dilation_h, const uint32_t dilation_w, const uint32_t padding_h,
-//     const uint32_t padding_w, const uint32_t output_h, const uint32_t output_w, float* output_data);
-
-// template <>
-// void gemm_with_bais_cpu<float>(
-//     const float* A, const float* B, const float* bias, const uint32_t M, const uint32_t N, const uint32_t K, float*
-//     D);
 
 StatusCode Convolution2DLayer::forward_cpu()
 {
@@ -123,41 +112,38 @@ StatusCode Convolution2DLayer::forward_cpu()
     this->output_w_ = (input_w + 2 * padding_w - dilation_w * (kernel_w - 1) - 1) / stride_w + 1;
 
     std::vector<uint32_t> output_shapes = {batch, out_channels_, output_h_, output_w_};
-    std::vector<uint32_t> img_col_shapes = {output_h_ * output_w_, group_size * kernel_h_ * kernel_w_};
+    std::vector<uint32_t> img_col_shapes = {group_size * kernel_h_ * kernel_w_, output_h_ * output_w_};
     std::vector<uint32_t> weight_col_shapes = {out_channels_ / groups_, group_size * kernel_h_ * kernel_w_};
     Tensor::TensorPtr img_col = std::make_shared<Tensor>(DataTypeFloat32, img_col_shapes);
-
+    // for debug
+    this->img2col_ = img_col;
     // make sure the col_buffer is on the same device with input
     img_col->apply_data();
 
-    // output->Reshape(output_shapes);
-    // reshape weight to col
-    // weight shape: out_channels, in_channels / groups, kernel_h, kernel_w
-    // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
-    // weight->Reshape(weight_col_shapes);
     for (uint32_t b = 0; b < batch; b++)
     {
         for (uint32_t g = 0; g < groups_; g++)
         {
             // im2col
             // input shape: N, C, H, W
-            // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
+            // img_col shape:  in_channels * kernel_h * kernel_w, output_h * output_w
             Tensor::TensorPtr weight_col = std::make_shared<Tensor>(DataTypeFloat32, weight_col_shapes);
             // weight_col->apply_data();
             im2col_cpu<float>(
                 input->ptr<float>() + b * in_channels_ * input_w * input_h + group_size * g * input_w * input_h,
                 group_size, input_h, input_w, kernel_h, kernel_w, stride_h, stride_w, dilation_h, dilation_w, padding_h,
                 padding_w, output_h_, output_w_, img_col->ptr<float>());
+
             weight_col->copy_from(reinterpret_cast<const void*>(weight->ptr<float>()
                                       + g * (out_channels_ / groups_) * group_size * kernel_h * kernel_w),
                 (out_channels_ / groups_) * group_size * kernel_h * kernel_w);
             // gemm with bias
-            // img_col shape: output_h * output_w, in_channels * kernel_h * kernel_w
-            // weight_col shape: out_channels, (in_channels / groups) * kernel_h * kernel_w
-            // bias shape: out_channels
-            // output shape: out_channels, output_h * output_w
-            gemm_with_bais_cpu<float>(img_col->ptr<float>(), weight_col->ptr<float>(),
-                bias->ptr<float>() + g * (out_channels_ / groups_), output_h_ * output_w_, out_channels_ / groups_,
+            // weight_col shape: out_group_size, in_group_size * kernel_h * kernel_w
+            // img_col shape: in_group_size * kernel_h * kernel_w, output_h * output_w
+            // bias shape: out_group_size
+            // output shape: out_group_size, output_h * output_w
+            gemm_with_bais_cpu<float>(weight_col->ptr<float>(), img_col->ptr<float>(),
+                bias->ptr<float>() + g * (out_channels_ / groups_), out_channels_ / groups_, output_h_ * output_w_,
                 group_size * kernel_h * kernel_w,
                 output->ptr<float>() + b * (output_h_ * output_w_ * out_channels_)
                     + g * (out_channels_ / groups_) * output_h_ * output_w_);

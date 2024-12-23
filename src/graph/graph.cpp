@@ -100,7 +100,7 @@ void Graph::process_in_edges(const std::vector<pnnx::Operand*>& inputs, const st
         case 4: in_edge->dtype_ = DataType::DataTypeInt32; break;
         case 6: in_edge->dtype_ = DataType::DataTypeInt16; break;
         case 7: in_edge->dtype_ = DataType::DataTypeInt8; break;
-        default: LOG(FATAL) << "unsupported data type"; break;
+        default: LOG(FATAL) << "unsupported data type" << input->name; break;
         }
 
         if (tensors_map_.find(input->name) == tensors_map_.end())
@@ -248,7 +248,15 @@ StatusCode Graph::infernce(Tensor& output_tensor)
         node->layer_->forward();
         auto end_time = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> diff = end_time - start_time;
-        LOG(INFO) << "layer name: " << node->name_ << " execute time: " << diff.count() * 1000 << " ms";
+        // LOG(INFO) << "layer name: " << node->name_ << " execute time: " << diff.count() * 1000 << " ms";
+
+        // LOG(INFO) << " test value " << node->layer_->outputs_[0]->ptr<float>()[0] << " "
+        //           << node->layer_->outputs_[0]->ptr<float>()[1] << " " << node->layer_->outputs_[0]->ptr<float>()[2]
+        //           << " " << node->layer_->outputs_[0]->ptr<float>()[3] << " "
+        //           << node->layer_->outputs_[0]->ptr<float>()[4] << " " << node->layer_->outputs_[0]->ptr<float>()[5]
+        //           << " " << node->layer_->outputs_[0]->ptr<float>()[6] << " "
+        //           << node->layer_->outputs_[0]->ptr<float>()[7] << " " << node->layer_->outputs_[0]->ptr<float>()[8]
+        //           << " " << node->layer_->outputs_[0]->ptr<float>()[9];
     }
     output_tensor = tensors_map_[std::to_string(tensor_nums_ - 1)]->clone();
     return StatusCode::Success;

@@ -36,10 +36,11 @@ public:
     StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
     StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
 
-private:
+    // private:
+public:
     uint32_t in_features_ = 0, out_features_ = 0;
     bool use_bias_ = false;
-    Tensor::TensorPtr weight_;
+    Tensor::TensorPtr weights_;
     Tensor::TensorPtr bias_;
 };
 } // namespace layer

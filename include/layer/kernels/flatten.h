@@ -21,7 +21,7 @@ using namespace inferx::core;
 class FlattenLayer : public Layer
 {
 public:
-    explicit FlattenLayer(std::string name);
+    explicit FlattenLayer(const std::string name);
     virtual ~FlattenLayer() = default;
     StatusCode forward_cpu() override;
 #ifdef ENABLE_CUDA

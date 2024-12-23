@@ -190,7 +190,10 @@ void* Tensor::cpu_data()
 
 void Tensor::copy_from(const void* src, uint32_t size)
 {
-    apply_data(allocator_);
+    if (this->data_ptr_ == nullptr)
+    {
+        apply_data(allocator_);
+    }
 
     if (this->device_type() == DeviceType::DeviceType_CPU)
     {
@@ -258,11 +261,10 @@ Tensor Tensor::broadcast(std::vector<uint32_t> real_shape, std::vector<uint32_t>
     // 在上面这个拷贝构造过程中关键的属性都已经完成了复制
     // 重要的是m_shapes_是广播后的shape，同时m_strides_有所不同
     new_tensor.Reshape(real_shape);
-    std::vector<uint32_t> new_strides;
     // 将广播出来的那些维度的strides数值置为0
     for (int i = 0; i < dims_; i++)
     {
-        m_strides_[i] *= (1 ^ is_broadcast[i]);
+        new_tensor.m_strides_[i] *= (1 ^ is_broadcast[i]);
     }
 
     return std::move(new_tensor);

@@ -89,8 +89,8 @@ StatusCode LinearLayer::load_model(const std::map<std::string, pnnx::Attribute>&
     CHECK_EQ(out_features_, weight_shape[0]) << "LinearLyaer : the weight height should be the same as out_features";
 
     std::vector<uint32_t> weight_shape_32 = {out_features_, in_features_};
-    weight_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, weight_shape_32);
-    weight_->copy_from(reinterpret_cast<const void*>(weight.data()), in_features_ * out_features_);
+    weights_ = std::make_shared<Tensor>(DataType::DataTypeFloat32, weight_shape_32);
+    weights_->copy_from(reinterpret_cast<const void*>(weight.data()), in_features_ * out_features_);
     return StatusCode::Success;
 }
 

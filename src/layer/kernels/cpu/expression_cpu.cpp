@@ -114,8 +114,8 @@ static void tensor_elementwise_broadcast(
                     for (size_t w = 0; w < W; w++)
                     {
                         auto idx = n * C * H * W + c * H * W + h * W + w;
-                        auto idx1 = n * strides1[0] + c * strides1[1] + h * strides1[2] + w;
-                        auto idx2 = n * strides2[0] + c * strides2[1] + h * strides2[2] + w;
+                        auto idx1 = n * strides1[0] + c * strides1[1] + h * strides1[2] + w * strides1[3];
+                        auto idx2 = n * strides2[0] + c * strides2[1] + h * strides2[2] + w * strides2[3];
                         // const auto x = const_cast<const float*>(tensor1.const_ptr<float>());
                         tensor_out->ptr<float>()[idx]
                             = op(tensor1.const_ptr<float>()[idx1], tensor2.const_ptr<float>()[idx2]);
@@ -211,9 +211,9 @@ std::vector<uint32_t> broadcast_shapes(const std::vector<uint32_t>& shapes1, con
         auto shape = std::max(shape1, shape2);
         broadcast_shape[i] = shape;
         broadcast_shape1[i] = (i < size1 && reverse_shape1[i] >= shape) ? shape : 1; // 得到为了广播而reshape的维度
-        is_broadcast1[i] = (i < size1 && reverse_shape1[i] >= shape) ? 0 : 1; // 表示当前维度是广播得到的
+        is_broadcast1[i] = (i < size1 && shape1 >= shape) ? 0 : 1; // 表示当前维度是广播得到的
         broadcast_shape2[i] = (i < size2 && reverse_shape2[i] >= shape) ? shape : 1;
-        is_broadcast2[i] = (i < size2 && reverse_shape2[i] >= shape) ? 0 : 1;
+        is_broadcast2[i] = (i < size2 && shape2 >= shape) ? 0 : 1;
     }
     reverse(broadcast_shape.begin(), broadcast_shape.end());
     reverse(broadcast_shape1.begin(), broadcast_shape1.end());
@@ -313,7 +313,6 @@ StatusCode ExpressionLayer::forward_cpu()
                     }
                     else
                     {
-                        // LOG(INFO) << "Begin to broadcast tensor.";
                         std::vector<uint32_t> broadcast_shape1, broadcast_shape2, is_broadcast1, is_broadcast2;
                         auto broadcast_shape = broadcast_shapes(
                             shape1, shape2, broadcast_shape1, broadcast_shape2, is_broadcast1, is_broadcast2);
@@ -352,7 +351,7 @@ StatusCode ExpressionLayer::forward_cpu()
         else if (node->token_.type == TokenType::TokenSqrt)
         {
             CHECK(op_stack.size() >= 1)
-                << "Dqrt operator stack size is less than 2, but this operator needs 2 operband.";
+                << "Sqrt operator stack size is less than 2, but this operator needs 2 operband.";
             auto right = op_stack.top();
             op_stack.pop();
             using R_T = std::decay_t<decltype(right)>;
@@ -376,7 +375,7 @@ StatusCode ExpressionLayer::forward_cpu()
     CHECK(op_stack.size() == 1) << "Operator stack size is not 1, check your expression.";
     auto result = std::move(op_stack.top());
     auto output = std::get<Tensor::TensorPtr>(result);
-    outputs_[0] = output;
+    outputs_[0]->copy_from(output->raw_ptr(), output->size());
     return StatusCode::Success;
 }
 } // namespace layer

@@ -1,6 +1,7 @@
 #include "core/common.h"
 #include "layer/kernels/maxpooling.h"
 #include <cstdint>
+#include <glog/logging.h>
 #include <limits>
 
 namespace inferx
@@ -63,7 +64,6 @@ StatusCode MaxPoolingLayer::forward_cpu()
             }
         }
     }
-
     return StatusCode::Success;
 }
 

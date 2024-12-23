@@ -119,7 +119,8 @@ public:
         return layer_name_;
     }
 
-protected:
+    // protected:
+
     DeviceType device_type_{DeviceType::DeviceType_UNKNOWN};
     std::string layer_name_;
     // std::vector<Tensor> weights_; // include all tensor param

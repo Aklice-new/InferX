@@ -18,9 +18,10 @@ int main()
     std::string param_path = "/home/aklice/WorkSpace/VSCode/Lab/InferX/test/pnnx_test/resnet18/res18.pnnx.param";
     std::string dog_path = "/home/aklice/WorkSpace/VSCode/Lab/InferX/test/test_resnet/img/dog.jpg";
     graph::Graph graph(model_path, param_path);
-    cv::Mat img = cv::imread(dog_path);
+    cv::Mat img = cv::imread(dog_path, 1);
     cv::resize(img, img, cv::Size(224, 224));
     img.convertTo(img, CV_32FC3);
+    cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     std::vector<cv::Mat> channel_imgs;
     cv::split(img, channel_imgs);
     std::cout << channel_imgs.size() << std::endl;
@@ -39,7 +40,7 @@ int main()
             for (int k = 0; k < 224; k++)
             {
                 input_tensor.ptr<float>()[i * 224 * 224 + j * 224 + k]
-                    = (channel_imgs[i].at<float>(j, k) - means[i]) / vars[i];
+                    = (channel_imgs[i].at<float>(j, k) / 255 - means[i]) / vars[i];
             }
         }
     }
@@ -59,6 +60,6 @@ int main()
             max_id = i;
         }
     }
-    LOG(INFO) << "The max id is " << max_id;
+    LOG(INFO) << "The max id is " << max_id << " and the max value is " << output_tensor.ptr<float>()[max_id];
     return 0;
 }

@@ -53,6 +53,8 @@ public:
 
     std::vector<Tensor::TensorPtr> weights_;
     std::vector<Tensor::TensorPtr> bias_;
+    // for debug
+    Tensor::TensorPtr img2col_; // only work when batch size is 1
 };
 } // namespace layer
 } // namespace inferx

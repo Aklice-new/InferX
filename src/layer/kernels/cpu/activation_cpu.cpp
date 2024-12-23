@@ -64,7 +64,7 @@ void hard_sigmoid(const DType* input, DType* output, size_t size)
 #pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
-        output[i] = input[i] > 3 ? 1 : (input[i] < -3 ? 0 : 0.2 * input[i] + 0.5);
+        output[i] = input[i] >= 3 ? 1 : (input[i] < -3 ? 0 : input[i] * 1.0 / 6 + 0.5);
     }
 }
 
@@ -74,7 +74,7 @@ void hard_swish(const DType* input, DType* output, size_t size)
 #pragma omp parallel for num_threads(MAX_THREADS)
     for (size_t i = 0; i < size; i++)
     {
-        output[i] = input[i] * (input[i] > 3 ? 1 : (input[i] < -3 ? 0 : 0.2 * input[i] + 0.5));
+        output[i] = input[i] * (input[i] > 3 ? 1 : (input[i] < -3 ? 0 : input[i] * 1.0 / 6 + 0.5));
     }
 }
 

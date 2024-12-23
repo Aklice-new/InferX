@@ -1,6 +1,8 @@
 #include "core/common.h"
 #include "layer/kernels/adaptive_avgpooling.h"
 
+#include <glog/logging.h>
+
 namespace inferx
 {
 
@@ -53,7 +55,6 @@ StatusCode AdaptiveAvgPoolingLayer::forward_cpu()
             }
         }
     }
-
     return StatusCode::Success;
 }
 } // namespace layer
