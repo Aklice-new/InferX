@@ -72,6 +72,7 @@ StatusCode CatLayer::forward_cpu()
             const auto input = inputs_[j]->ptr<float>() + i * curr_shape[dim] * offset;
             const auto output = outputs_[0]->ptr<float>() + catted_size;
             memcpy(output, input, curr_shape[dim] * offset * sizeof(float));
+            catted_size += curr_shape[dim] * offset * sizeof(float);
         }
     }
 

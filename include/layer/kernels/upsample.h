@@ -38,7 +38,7 @@ public:
     StatusCode load_param(const std::map<std::string, pnnx::Parameter>& params) override;
     // StatusCode load_model(const std::map<std::string, pnnx::Attribute>& attributes) override;
 
-private:
+    // private:
     Mode mode_;
     uint32_t scale_factor_h_, scale_factor_w_;
 };

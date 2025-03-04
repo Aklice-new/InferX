@@ -11,7 +11,7 @@ namespace layer
 using namespace core;
 StatusCode ViewLayer::forward_gpu()
 {
-    return StatusCode::Success;
+    return forward_cpu();
 }
 } // namespace layer
 } // namespace inferx

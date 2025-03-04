@@ -10,6 +10,7 @@
  */
 #include "core/common.h"
 #include "layer/kernels/upsample.h"
+#include "utils/utils.h"
 
 #include <cstdint>
 #include <glog/logging.h>
@@ -37,14 +38,16 @@ StatusCode UpsampleLayer::forward_cpu()
     auto output_batch_size = C * H * W * scale_factor_h_ * scale_factor_w_;
     auto output_channels_size = H * W * scale_factor_h_ * scale_factor_w_;
 
-    CHECK_EQ(H * scale_factor_h_, out_shapes[2]) << "Batch size must be the same.";
-    CHECK_EQ(W * scale_factor_w_, out_shapes[3]) << "Channel size must be the same.";
+    CHECK_EQ(H * scale_factor_h_, out_shapes[2]) << "Row size does not match."
+                                                 << "Expected: " << H * scale_factor_h_ << " Got: " << out_shapes[2];
+    CHECK_EQ(W * scale_factor_w_, out_shapes[3]) << "Column size does not match."
+                                                 << "Expected: " << W * scale_factor_w_ << " Got: " << out_shapes[3];
 
     switch (mode_)
     {
     case Mode::Nearest:
     {
-#pragma omp parallel for
+#pragma omp parallel for num_threads(MAX_THREADS)
         for (uint32_t n = 0; n < N; n++)
         {
             for (uint32_t c = 0; c < C; c++)

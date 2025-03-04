@@ -92,5 +92,6 @@ if(ENABLE_examples)
     add_test(test_linear)
     add_test(test_hardsigmoid)
     add_test(test_hardswish)
+    add_test(test_upsample)
 endif()
 

@@ -82,6 +82,7 @@ StatusCode CUDAMaxPooling_ForwardImp(const Tensor::TensorPtr input, Tensor::Tens
         max_pooling_kernel<float><<<grid, block>>>(input->ptr<float>(), output->ptr<float>(), iH, iW, oH, oW, padding_h,
             padding_w, kernel_h, kernel_w, stride_h, stride_w, input_padded_h, input_padded_w, iH * iW, oH * oW);
         break;
+    default: return StatusCode::Failed;
     }
     return StatusCode::Success;
 }

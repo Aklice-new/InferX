@@ -60,7 +60,7 @@ public:
     virtual void* allocate(size_t size) = 0;
     virtual void release(void* ptr) = 0;
     virtual DeviceType get_device_type() = 0;
-    void memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, bool is_async = false);
+    static void memcpy(void* dst, const void* src, size_t size, MemcpyKind kind, bool is_async = false);
     virtual ~Allocator() {}
     DeviceType device_type_ = DeviceType::DeviceType_UNKNOWN;
     std::mutex alloc_mutex;

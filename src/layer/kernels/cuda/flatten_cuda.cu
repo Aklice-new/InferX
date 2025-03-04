@@ -9,10 +9,10 @@ using namespace inferx::core;
 
 StatusCode FlattenLayer::forward_gpu()
 {
-    auto input = inputs_[0];
-    auto output = outputs_[0];
+    // auto input = inputs_[0];
+    // auto output = outputs_[0];
 
-    return StatusCode::Success;
+    return forward_cpu();
 }
 } // namespace layer
 } // namespace inferx
